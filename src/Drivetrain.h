@@ -27,6 +27,7 @@ public:
 
 	void Stop(void);
 	void Update();
+	double GetControllerValue(frc::GenericHID::JoystickHand);
 };
 
 #endif /* SRC_DRIVETRAIN_H_ */

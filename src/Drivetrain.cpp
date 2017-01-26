@@ -34,3 +34,8 @@ void Drivetrain::Update()
 	m_rightMotor2.Set(rightValue/8);
 	m_leftMotor2.Set(-leftValue/8);
 }
+
+double Drivetrain::GetControllerValue(frc::GenericHID::JoystickHand hand)
+{
+	return controller.GetY(hand);
+}

@@ -5,6 +5,7 @@
 #include <IterativeRobot.h>
 #include <LiveWindow/LiveWindow.h>
 #include <SmartDashboard/SendableChooser.h>
+#include <SmartDashboard/Sendable.h>
 #include <SmartDashboard/SmartDashboard.h>
 
 #include "Drivetrain.h"
@@ -70,7 +71,8 @@ public:
 	void TeleopPeriodic()
 	{
 		drivetrain.Update();
-
+		frc::SmartDashboard::PutNumber("Joystick Left: ", drivetrain.GetControllerValue(frc::GenericHID::kLeftHand));
+		frc::SmartDashboard::PutNumber("Joystick Right: ", drivetrain.GetControllerValue(frc::GenericHID::kRightHand));
 	}
 
 	void TestPeriodic()
