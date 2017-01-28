@@ -1,14 +1,20 @@
 #include <iostream>
 #include <memory>
 #include <string>
+#include <cmath>
+#include <Timer.h>
 
 #include <IterativeRobot.h>
 #include <LiveWindow/LiveWindow.h>
 #include <SmartDashboard/SendableChooser.h>
 #include <SmartDashboard/Sendable.h>
 #include <SmartDashboard/SmartDashboard.h>
+#include <CameraServer.h>
 
 #include "Drivetrain.h"
+
+const double PERCENT_SPEED = .2;
+double round(double value, int numDecimals);
 
 class Robot: public frc::IterativeRobot
 {
@@ -18,8 +24,11 @@ public:
 	void RobotInit()
 	{
 		chooser.AddDefault(autoNameDefault, autoNameDefault);
-		chooser.AddObject(autoNameCustom, autoNameCustom);
+		chooser.AddObject(autoNameLeft, autoNameLeft);
+		chooser.AddObject(autoNameMiddle, autoNameMiddle);
+		chooser.AddObject(autoNameRight, autoNameRight);
 		frc::SmartDashboard::PutData("Auto Modes", &chooser);
+		frc::CameraServer::GetInstance()->StartAutomaticCapture("Driving Camera", 0);
 	}
 
 
@@ -41,21 +50,38 @@ public:
 		// std::string autoSelected = SmartDashboard::GetString("Auto Selector", autoNameDefault);
 		std::cout << "Auto selected: " << autoSelected << std::endl;
 
-		if (autoSelected == autoNameCustom)
+		if (autoSelected == autoNameLeft)
 		{
-			// Custom Auto goes here
+			// Left Auto goes here
+		}
+		else if (autoSelected == autoNameMiddle)
+		{
+			// Middle Auto goes here
+		}
+		else if (autoSelected == autoNameRight)
+		{
+			// Right Auto goes here
 		}
 		else
 		{
 			// Default Auto goes here
 		}
+
 	}
 
 	void AutonomousPeriodic()
 	{
-		if (autoSelected == autoNameCustom)
+		if (autoSelected == autoNameLeft)
 		{
-			// Custom Auto goes here
+			// Left Auto goes here
+		}
+		else if (autoSelected == autoNameMiddle)
+		{
+			// Middle Auto goes here
+		}
+		else if (autoSelected == autoNameRight)
+		{
+			// Right Auto goes here
 		}
 		else
 		{
@@ -70,9 +96,10 @@ public:
 
 	void TeleopPeriodic()
 	{
-		drivetrain.Update();
-		frc::SmartDashboard::PutNumber("Joystick Left: ", drivetrain.GetControllerValue(frc::GenericHID::kLeftHand));
-		frc::SmartDashboard::PutNumber("Joystick Right: ", drivetrain.GetControllerValue(frc::GenericHID::kRightHand));
+		drivetrain.Update(PERCENT_SPEED);
+		frc::SmartDashboard::PutNumber("Joystick Left: ", round(drivetrain.GetControllerValue(frc::GenericHID::kLeftHand), 2));
+		frc::SmartDashboard::PutNumber("Joystick Right: ", round(drivetrain.GetControllerValue(frc::GenericHID::kRightHand), 2));
+		frc::SmartDashboard::PutNumber("Gyro Angle: ", round(drivetrain.GetGyroAngle(), 2));
 	}
 
 	void TestPeriodic()
@@ -84,10 +111,17 @@ private:
 	frc::LiveWindow* lw = LiveWindow::GetInstance();
 	frc::SendableChooser<std::string> chooser;
 	const std::string autoNameDefault = "Default";
-	const std::string autoNameCustom = "My Auto";
+	const std::string autoNameLeft = "Left Start";
+	const std::string autoNameMiddle = "Middle Start";
+	const std::string autoNameRight = "Right Start";
 	std::string autoSelected;
 
 	Drivetrain drivetrain {};
 };
+
+double round(double value, int numDecimals)
+{
+	return trunc(value * pow(10, numDecimals)) / pow(10, numDecimals);
+}
 
 START_ROBOT_CLASS(Robot)
