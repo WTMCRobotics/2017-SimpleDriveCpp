@@ -11,6 +11,8 @@
 #include <VictorSP.h>
 #include <XBoxController.h>
 #include <GenericHID.h>
+#include <ADXRS450_Gyro.h>
+#include <SPI.h>
 
 class Drivetrain
 {
@@ -20,14 +22,16 @@ private:
 	frc::VictorSP m_rightMotor2 {3};
 	frc::VictorSP m_leftMotor2  {2};
 	frc::XboxController controller{0};
+	frc::ADXRS450_Gyro gyro{frc::SPI::kOnboardCS0};
 
 public:
 	Drivetrain();
 	virtual ~Drivetrain();
 
 	void Stop(void);
-	void Update();
+	void Update(const double speedLimit);
 	double GetControllerValue(frc::GenericHID::JoystickHand);
+	double GetGyroAngle();
 };
 
 #endif /* SRC_DRIVETRAIN_H_ */
