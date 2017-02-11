@@ -17,10 +17,10 @@
 class Drivetrain
 {
 private:
-	frc::VictorSP m_rightMotor1 {1};
 	frc::VictorSP m_leftMotor1  {0};
-	frc::VictorSP m_rightMotor2 {3};
+	frc::VictorSP m_rightMotor1 {1};
 	frc::VictorSP m_leftMotor2  {2};
+	frc::VictorSP m_rightMotor2 {3};
 	frc::XboxController controller{0};
 	frc::ADXRS450_Gyro gyro{frc::SPI::kOnboardCS0};
 

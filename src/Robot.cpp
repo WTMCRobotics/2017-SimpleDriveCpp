@@ -12,12 +12,37 @@
 #include <CameraServer.h>
 
 #include "Drivetrain.h"
+#include "CANTalonDrivetrain.h"
 
-const double PERCENT_SPEED = .2;
+// Uncomment to define the motor controller being used
+//
+#define CANTalon
+//#define VictorSP
+
+
 double round(double value, int numDecimals);
+bool speedSet = false;
 
 class Robot: public frc::IterativeRobot
 {
+
+private:
+	frc::LiveWindow* lw = LiveWindow::GetInstance();
+	frc::SendableChooser<std::string> chooser;
+	const std::string autoNameDefault = "Default";
+	const std::string autoNameLeft = "Left Start";
+	const std::string autoNameMiddle = "Middle Start";
+	const std::string autoNameRight = "Right Start";
+	std::string autoSelected;
+
+#if defined(CANTalon)
+	CANTalonDriveTrain drivetrain {};
+#elif defined(VictorSP)
+	Drivetrain drivetrain {};
+#else
+#error "Need to define drivetrain";
+#endif
+
 
 public:
 
@@ -96,7 +121,29 @@ public:
 
 	void TeleopPeriodic()
 	{
-		drivetrain.Update(PERCENT_SPEED);
+		//Timer timer;
+		//double testVal;
+		//timer.Reset();
+		//timer.Start();
+		double multiply = 1024;
+
+		drivetrain.Update(multiply);
+
+		/*while (timer.Get() < 5)
+		{
+			testVal = 1024;
+			drivetrain.Update(testVal, testVal);
+			frc::SmartDashboard::PutNumber("Timer: ", timer.Get());
+		}
+		timer.Reset();
+		timer.Start();
+		while (timer.Get() < 3)
+		{
+			testVal = 0;
+			drivetrain.Update(testVal, testVal);
+			frc::SmartDashboard::PutNumber("Timer: ", timer.Get());
+		}*/
+
 		frc::SmartDashboard::PutNumber("Joystick Left: ", round(drivetrain.GetControllerValue(frc::GenericHID::kLeftHand), 2));
 		frc::SmartDashboard::PutNumber("Joystick Right: ", round(drivetrain.GetControllerValue(frc::GenericHID::kRightHand), 2));
 		frc::SmartDashboard::PutNumber("Gyro Angle: ", round(drivetrain.GetGyroAngle(), 2));
@@ -107,16 +154,7 @@ public:
 		lw->Run();
 	}
 
-private:
-	frc::LiveWindow* lw = LiveWindow::GetInstance();
-	frc::SendableChooser<std::string> chooser;
-	const std::string autoNameDefault = "Default";
-	const std::string autoNameLeft = "Left Start";
-	const std::string autoNameMiddle = "Middle Start";
-	const std::string autoNameRight = "Right Start";
-	std::string autoSelected;
 
-	Drivetrain drivetrain {};
 };
 
 double round(double value, int numDecimals)
