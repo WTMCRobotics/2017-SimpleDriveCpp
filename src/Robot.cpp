@@ -125,7 +125,7 @@ public:
 		//double testVal;
 		//timer.Reset();
 		//timer.Start();
-		double maxSpeed = 100;
+		double maxSpeed = 2000;
 
 		drivetrain.Update(maxSpeed);
 

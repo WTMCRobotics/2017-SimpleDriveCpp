@@ -23,7 +23,7 @@ CANTalonDriveTrain::CANTalonDriveTrain()
 	m_rightMasterDrive.SetFeedbackDevice(CANTalon::QuadEncoder);
 	m_rightMasterDrive.ConfigEncoderCodesPerRev(2048);
 	m_rightMasterDrive.ConfigPeakOutputVoltage(+12.0f, -12.0f);
-	m_rightMasterDrive.SetVoltageRampRate(5.5);
+	m_rightMasterDrive.SetVoltageRampRate(7);
 	m_rightMasterDrive.SetSensorDirection(true);
 
 	m_leftMasterDrive.SetControlMode(CANSpeedController::kSpeed);
@@ -31,7 +31,7 @@ CANTalonDriveTrain::CANTalonDriveTrain()
 	m_leftMasterDrive.SetFeedbackDevice(CANTalon::QuadEncoder);
 	m_leftMasterDrive.ConfigEncoderCodesPerRev(2048);
 	m_leftMasterDrive.ConfigPeakOutputVoltage(+12.0f, -12.0f);
-	m_leftMasterDrive.SetVoltageRampRate(5.5);
+	m_leftMasterDrive.SetVoltageRampRate(7);
 	m_leftMasterDrive.SetSensorDirection(true);
 
 #elif defined(MODE_Position)
@@ -44,9 +44,11 @@ CANTalonDriveTrain::CANTalonDriveTrain()
 #error No mode selected for TallonSRX
 #endif
 
-	//m_rightSlaveDrive.SetControlMode(CANSpeedController::kFollower); //Speed);
-	//m_rightSlaveDrive.Set(1);
+	m_rightSlaveDrive.SetControlMode(CANSpeedController::kFollower); //Speed);
+	m_rightSlaveDrive.Set(1);
 
+	m_leftSlaveDrive.SetControlMode(CANSpeedController::kFollower);
+	m_leftSlaveDrive.Set(2);
 //	m_rightMasterDrive.SetPID(1, 0, 0);
 
 }
@@ -90,6 +92,14 @@ void CANTalonDriveTrain::Update(const double maxSpeed)
 
 	m_leftMasterDrive.Set(m_leftSpeed);
 	m_rightMasterDrive.Set(m_rightSpeed);
+
+	frc::SmartDashboard::PutNumber("Right P: ", m_rightMasterDrive.GetP());
+	frc::SmartDashboard::PutNumber("Right I: ", m_rightMasterDrive.GetI());
+	frc::SmartDashboard::PutNumber("Right D: ", m_rightMasterDrive.GetD());
+
+	frc::SmartDashboard::PutNumber("Left P: ", m_leftMasterDrive.GetP());
+	frc::SmartDashboard::PutNumber("Left I: ", m_leftMasterDrive.GetI());
+	frc::SmartDashboard::PutNumber("Left D: ", m_leftMasterDrive.GetD());
 
 }
 

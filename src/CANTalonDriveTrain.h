@@ -27,9 +27,9 @@ class CANTalonDriveTrain
 {
 private:
 	CANTalon m_rightMasterDrive {1};
-//	CANTalon m_rightSlaveDrive {3};
+	CANTalon m_rightSlaveDrive {3};
 	CANTalon m_leftMasterDrive {2};
-//	CANTalon m_leftSlaveDrive {4}
+	CANTalon m_leftSlaveDrive {4};
 	frc::XboxController m_controller{0};
 	frc::ADXRS450_Gyro m_gyro{frc::SPI::kOnboardCS0};
 
