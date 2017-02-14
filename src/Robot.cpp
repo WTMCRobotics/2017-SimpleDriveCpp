@@ -125,9 +125,9 @@ public:
 		//double testVal;
 		//timer.Reset();
 		//timer.Start();
-		double multiply = 1024;
+		double maxSpeed = 100;
 
-		drivetrain.Update(multiply);
+		drivetrain.Update(maxSpeed);
 
 		/*while (timer.Get() < 5)
 		{
@@ -145,7 +145,13 @@ public:
 		}*/
 
 		frc::SmartDashboard::PutNumber("Joystick Left: ", round(drivetrain.GetControllerValue(frc::GenericHID::kLeftHand), 2));
+		frc::SmartDashboard::PutNumber("Right Command: ", round(drivetrain.GetRightCommand(), 2));
+		frc::SmartDashboard::PutNumber("Right Speed: ", round(drivetrain.GetRightSpeed(), 2));
+
 		frc::SmartDashboard::PutNumber("Joystick Right: ", round(drivetrain.GetControllerValue(frc::GenericHID::kRightHand), 2));
+		frc::SmartDashboard::PutNumber("Left Command: ", round(drivetrain.GetLeftCommand(), 2));
+		frc::SmartDashboard::PutNumber("Left Speed: ", round(drivetrain.GetLeftSpeed(), 2));
+
 		frc::SmartDashboard::PutNumber("Gyro Angle: ", round(drivetrain.GetGyroAngle(), 2));
 	}
 

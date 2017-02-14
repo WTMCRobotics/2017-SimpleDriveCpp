@@ -3,6 +3,7 @@
  *
  *  Created on: Feb 6, 2017
  *      Author: tomh
+ asdfasdf
  */
 
 #ifndef SRC_CANTALONDRIVETRAIN_H_
@@ -26,21 +27,34 @@ class CANTalonDriveTrain
 {
 private:
 	CANTalon m_rightMasterDrive {1};
-	CANTalon m_rightSlaveDrive {2};
-//	CANTalon m_LeftMasterDrive {3};
+//	CANTalon m_rightSlaveDrive {3};
+	CANTalon m_leftMasterDrive {2};
 //	CANTalon m_leftSlaveDrive {4}
 	frc::XboxController m_controller{0};
 	frc::ADXRS450_Gyro m_gyro{frc::SPI::kOnboardCS0};
+
+	double m_leftSpeed = 0.0;
+	double m_rightSpeed = 0.0;
+	double m_leftCommand = 0.0;
+	double m_rightCommand = 0.0;
+
+
 public:
 	CANTalonDriveTrain();
 	virtual ~CANTalonDriveTrain();
 
 	void Stop();
 	void Update(double rightSpeed, double leftSpeed);
-	void Update(const double speedLimit);
+	void Update(const double scaleFactor);
 
 	double GetControllerValue(frc::GenericHID::JoystickHand hand);
 	double GetGyroAngle(void);
+
+	double GetLeftSpeed(void)    { return m_leftSpeed;}
+	double GetRightSpeed(void)   { return m_rightSpeed;}
+
+	double GetLeftCommand(void)  { return m_leftCommand;}
+	double GetRightCommand(void) { return m_rightCommand;}
 
 };
 
