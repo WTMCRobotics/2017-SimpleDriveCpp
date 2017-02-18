@@ -92,15 +92,6 @@ void CANTalonDriveTrain::Update(const double maxSpeed)
 
 	m_leftMasterDrive.Set(m_leftSpeed);
 	m_rightMasterDrive.Set(m_rightSpeed);
-
-	frc::SmartDashboard::PutNumber("Right P: ", m_rightMasterDrive.GetP());
-	frc::SmartDashboard::PutNumber("Right I: ", m_rightMasterDrive.GetI());
-	frc::SmartDashboard::PutNumber("Right D: ", m_rightMasterDrive.GetD());
-
-	frc::SmartDashboard::PutNumber("Left P: ", m_leftMasterDrive.GetP());
-	frc::SmartDashboard::PutNumber("Left I: ", m_leftMasterDrive.GetI());
-	frc::SmartDashboard::PutNumber("Left D: ", m_leftMasterDrive.GetD());
-
 }
 
 double CANTalonDriveTrain::GetControllerValue(frc::GenericHID::JoystickHand hand)

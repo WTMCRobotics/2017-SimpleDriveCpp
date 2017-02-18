@@ -10,6 +10,7 @@
 #include <SmartDashboard/Sendable.h>
 #include <SmartDashboard/SmartDashboard.h>
 #include <CameraServer.h>
+#include <tables/ITable.h>
 
 #include "Drivetrain.h"
 #include "CANTalonDrivetrain.h"
@@ -34,6 +35,7 @@ private:
 	const std::string autoNameMiddle = "Middle Start";
 	const std::string autoNameRight = "Right Start";
 	std::string autoSelected;
+	std::shared_ptr<NetworkTable> axisCameraTable;
 
 #if defined(CANTalon)
 	CANTalonDriveTrain drivetrain {};
@@ -48,12 +50,16 @@ public:
 
 	void RobotInit()
 	{
-		chooser.AddDefault(autoNameDefault, autoNameDefault);
 		chooser.AddObject(autoNameLeft, autoNameLeft);
 		chooser.AddObject(autoNameMiddle, autoNameMiddle);
 		chooser.AddObject(autoNameRight, autoNameRight);
 		frc::SmartDashboard::PutData("Auto Modes", &chooser);
 		frc::CameraServer::GetInstance()->StartAutomaticCapture("Driving Camera", 0);
+
+		axisCameraTable = NetworkTable::GetTable("GRIP/contoursReport");
+		double gripNumbers[1];
+		axisCameraTable->GetNumberArray("contoursReport", gripNumbers);
+		frc::SmartDashboard::PutNumber("Center X: ", gripNumbers[0]);
 	}
 
 
@@ -70,39 +76,50 @@ public:
 	 */
 	void AutonomousInit() override
 	{
-
 		autoSelected = chooser.GetSelected();
 		// std::string autoSelected = SmartDashboard::GetString("Auto Selector", autoNameDefault);
 		std::cout << "Auto selected: " << autoSelected << std::endl;
-
-		if (autoSelected == autoNameLeft)
-		{
-			// Left Auto goes here
-		}
-		else if (autoSelected == autoNameMiddle)
-		{
-			// Middle Auto goes here
-		}
-		else if (autoSelected == autoNameRight)
-		{
-			// Right Auto goes here
-		}
-		else
-		{
-			// Default Auto goes here
-		}
-
 	}
 
 	void AutonomousPeriodic()
 	{
+		Timer timer;
+		double testVal;
+		timer.Reset();
+		timer.Start();
 		if (autoSelected == autoNameLeft)
 		{
-			// Left Auto goes here
+			while (timer.Get() < 5)
+			{
+				testVal = 500;
+				drivetrain.Update(testVal);
+				frc::SmartDashboard::PutNumber("Timer: ", timer.Get());
+			}
+			timer.Reset();
+			timer.Start();
+			while (timer.Get() < 3)
+			{
+				testVal = 0;
+				drivetrain.Update(testVal);
+				frc::SmartDashboard::PutNumber("Timer: ", timer.Get());
+			}
 		}
 		else if (autoSelected == autoNameMiddle)
 		{
-			// Middle Auto goes here
+			while (timer.Get() < 7)
+			{
+				testVal = 500;
+				drivetrain.Update(testVal);
+				frc::SmartDashboard::PutNumber("Timer: ", timer.Get());
+			}
+			timer.Reset();
+			timer.Start();
+			while (timer.Get() < 2)
+			{
+				testVal = 0;
+				drivetrain.Update(testVal);
+				frc::SmartDashboard::PutNumber("Timer: ", timer.Get());
+			}
 		}
 		else if (autoSelected == autoNameRight)
 		{
@@ -121,28 +138,14 @@ public:
 
 	void TeleopPeriodic()
 	{
-		//Timer timer;
-		//double testVal;
-		//timer.Reset();
-		//timer.Start();
 		double maxSpeed = 2000;
 
 		drivetrain.Update(maxSpeed);
 
-		/*while (timer.Get() < 5)
-		{
-			testVal = 1024;
-			drivetrain.Update(testVal, testVal);
-			frc::SmartDashboard::PutNumber("Timer: ", timer.Get());
-		}
-		timer.Reset();
-		timer.Start();
-		while (timer.Get() < 3)
-		{
-			testVal = 0;
-			drivetrain.Update(testVal, testVal);
-			frc::SmartDashboard::PutNumber("Timer: ", timer.Get());
-		}*/
+		axisCameraTable = NetworkTable::GetTable("GRIP/myBlobsReport");
+		double centerX = 0;
+		axisCameraTable->GetNumber("x", centerX);
+		frc::SmartDashboard::PutNumber("Center X: ", centerX);
 
 		frc::SmartDashboard::PutNumber("Joystick Left: ", round(drivetrain.GetControllerValue(frc::GenericHID::kLeftHand), 2));
 		frc::SmartDashboard::PutNumber("Right Command: ", round(drivetrain.GetRightCommand(), 2));
