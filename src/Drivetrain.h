@@ -24,14 +24,18 @@ private:
 	frc::XboxController controller{0};
 	frc::ADXRS450_Gyro gyro{frc::SPI::kOnboardCS0};
 
+	double m_speedFactor = 1.0;
+
+
 public:
 	Drivetrain();
 	virtual ~Drivetrain();
 
 	void Stop(void);
-	void Update(const double speedLimit);
-	double GetControllerValue(frc::GenericHID::JoystickHand);
-	double GetGyroAngle();
+	void Update(double leftControlValue, double rightControlValue);
+
+	double GetSpeedLimit(void) { return m_speedFactor; }
+	void SetSpeedLimit(double speedFactor) { m_speedFactor = speedFactor; }
 };
 
 #endif /* SRC_DRIVETRAIN_H_ */

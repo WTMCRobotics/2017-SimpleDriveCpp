@@ -10,162 +10,245 @@
 #include <SmartDashboard/Sendable.h>
 #include <SmartDashboard/SmartDashboard.h>
 #include <CameraServer.h>
+#include <tables/ITable.h>
 
-#include "Drivetrain.h"
+#include "RobotDefs.h"
+
+#include <PowerDistributionPanel.h>
+#include <ADXRS450_Gyro.h>
+
 #include "CANTalonDrivetrain.h"
+#include "Winch.h"
+#include "GearLift.h"
 
-// Uncomment to define the motor controller being used
+
+// forward declarations
 //
-#define CANTalon
-//#define VictorSP
-
+void ProcessDriveTrain(void);
+void ProcessWinch(void);
+void ProcessGearLift(void);
+void UpdateDashboard(void);
 
 double round(double value, int numDecimals);
-bool speedSet = false;
+
+
+const double maxSpeed = 2000;
 
 class Robot: public frc::IterativeRobot
 {
 
 private:
+	frc::PowerDistributionPanel	m_PDP {0};
+	frc::XboxController	m_controller{0};
+	frc::ADXRS450_Gyro 	m_gyro{frc::SPI::kOnboardCS0};
+	CANTalonDriveTrain 	m_driveTrain {&m_controller, &m_gyro};
+	Winch 				m_winchMotor {&m_PDP};
+	GearLift			m_gearLift   {};
+
+	double m_distance[AUTO_MOVE_MAX_SEGMENTS];
+	double m_angle[AUTO_MOVE_MAX_SEGMENTS];
+	double m_speed[AUTO_MOVE_MAX_SEGMENTS];
+
+	double m_leftControllerValue;
+	double m_rightControllerValue;
+	double m_gyroAngle;
+
 	frc::LiveWindow* lw = LiveWindow::GetInstance();
-	frc::SendableChooser<std::string> chooser;
-	const std::string autoNameDefault = "Default";
-	const std::string autoNameLeft = "Left Start";
-	const std::string autoNameMiddle = "Middle Start";
-	const std::string autoNameRight = "Right Start";
-	std::string autoSelected;
 
-#if defined(CANTalon)
-	CANTalonDriveTrain drivetrain {};
-#elif defined(VictorSP)
-	Drivetrain drivetrain {};
-#else
-#error "Need to define drivetrain";
-#endif
+	frc::SendableChooser<std::string> startPositionSelector;
+	const std::string StartPositionLeft	  = "Left Start";
+	const std::string StartPositionCenter = "Middle Start";
+	const std::string StartPositionRight  = "Right Start";
+	std::string startPosition;
+	std::shared_ptr<NetworkTable> axisCameraTable;
 
+	typedef enum
+	{
+		autoStart,
+		autoTraverse,
+		autoDropGear,
+		autoDone
+	} eAutonomousState;
+	eAutonomousState m_autoState = autoStart;
 
 public:
 
 	void RobotInit()
 	{
-		chooser.AddDefault(autoNameDefault, autoNameDefault);
-		chooser.AddObject(autoNameLeft, autoNameLeft);
-		chooser.AddObject(autoNameMiddle, autoNameMiddle);
-		chooser.AddObject(autoNameRight, autoNameRight);
-		frc::SmartDashboard::PutData("Auto Modes", &chooser);
+		startPositionSelector.AddObject(StartPositionLeft,   StartPositionLeft);
+		startPositionSelector.AddObject(StartPositionCenter, StartPositionCenter);
+		startPositionSelector.AddObject(StartPositionRight,  StartPositionRight);
+		frc::SmartDashboard::PutData("Auto Modes", &startPositionSelector);
+
 		frc::CameraServer::GetInstance()->StartAutomaticCapture("Driving Camera", 0);
+
+//.		axisCameraTable = NetworkTable::GetTable("GRIP/contoursReport");
+//.		double gripNumbers[1];
+//.		axisCameraTable->GetNumberArray("contoursReport", gripNumbers);
+//.		frc::SmartDashboard::PutNumber("Center X: ", gripNumbers[0]);
 	}
 
 
-	/*
-	 * This autonomous (along with the chooser code above) shows how to select
-	 * between different autonomous modes using the dashboard. The sendable
-	 * chooser code works with the Java SmartDashboard. If you prefer the
-	 * LabVIEW Dashboard, remove all of the chooser code and uncomment the
-	 * GetString line to get the auto name from the text box below the Gyro.
-	 *
-	 * You can add additional auto modes by adding additional comparisons to the
-	 * if-else structure below with additional strings. If using the
-	 * SendableChooser make sure to add them to the chooser code above as well.
-	 */
+	//=================================================================================
+	// Autonomous Initialize
+	//
 	void AutonomousInit() override
 	{
+		m_autoState = autoStart;
 
-		autoSelected = chooser.GetSelected();
-		// std::string autoSelected = SmartDashboard::GetString("Auto Selector", autoNameDefault);
-		std::cout << "Auto selected: " << autoSelected << std::endl;
+		startPosition = startPositionSelector.GetSelected();
+		// std::string startPosition = SmartDashboard::GetString("Auto Selector", autoNameDefault);
+		std::cout << "Auto selected: " << startPosition << std::endl;
 
-		if (autoSelected == autoNameLeft)
+		for (int i=0; i<AUTO_MOVE_MAX_SEGMENTS; i++)
 		{
-			// Left Auto goes here
-		}
-		else if (autoSelected == autoNameMiddle)
-		{
-			// Middle Auto goes here
-		}
-		else if (autoSelected == autoNameRight)
-		{
-			// Right Auto goes here
-		}
-		else
-		{
-			// Default Auto goes here
+			m_distance[i] = 0.0;
+			m_speed[i] = 0.0;
+			m_angle[i] = 0.0;
 		}
 
+		if (startPosition == StartPositionLeft)
+		{
+			m_angle[0] 		= kLeftAngle1;
+			m_distance[0] 	= kLeftLeg1;
+			m_speed[0]		= kLeftSpeed1;
+			m_angle[1] 		= kLeftAngle1;
+			m_distance[1] 	= kLeftLeg2;
+			m_speed[1]		= kLeftSpeed2;
+		}
+		else if (startPosition == StartPositionCenter)
+		{
+			m_angle[0] 		= kMidAngle1;
+			m_distance[0] 	= kMidLeg1;
+			m_speed[0]		= kMidSpeed1;
+			m_angle[1] 		= kMidAngle1;
+			m_distance[1] 	= kMidLeg2;
+			m_speed[1]		= kMidSpeed2;
+			m_angle[2] 		= kMidAngle3;
+			m_distance[2] 	= kMidLeg3;
+			m_speed[2]		= kMidSpeed3;
+		}
+		else if (startPosition == StartPositionRight)
+		{
+			m_angle[0] 		= kRightAngle1;
+			m_distance[0] 	= kRightLeg1;
+			m_speed[0]		= kRightSpeed1;
+			m_angle[1] 		= kRightAngle1;
+			m_distance[1] 	= kRightLeg2;
+			m_speed[2]		= kRightSpeed2;
+		}
 	}
+
 
 	void AutonomousPeriodic()
 	{
-		if (autoSelected == autoNameLeft)
+		switch (m_autoState)
 		{
-			// Left Auto goes here
-		}
-		else if (autoSelected == autoNameMiddle)
-		{
-			// Middle Auto goes here
-		}
-		else if (autoSelected == autoNameRight)
-		{
-			// Right Auto goes here
-		}
-		else
-		{
-			// Default Auto goes here
+		case autoStart:
+			break;
+		case autoTraverse:
+			break;
+		case autoDropGear:
+			break;
+		case autoDone:
+			break;
 		}
 	}
 
 	void TeleopInit()
 	{
-		drivetrain.Stop();
+		m_driveTrain.Stop();
 	}
 
 	void TeleopPeriodic()
 	{
-		//Timer timer;
-		//double testVal;
-		//timer.Reset();
-		//timer.Start();
-		double maxSpeed = 100;
+		m_leftControllerValue =m_controller.GetY(frc::GenericHID::kLeftHand);
+		m_rightControllerValue = m_controller.GetY(frc::GenericHID::kLeftHand);
+		m_gyroAngle = m_gyro.GetAngle();
 
-		drivetrain.Update(maxSpeed);
 
-		/*while (timer.Get() < 5)
-		{
-			testVal = 1024;
-			drivetrain.Update(testVal, testVal);
-			frc::SmartDashboard::PutNumber("Timer: ", timer.Get());
-		}
-		timer.Reset();
-		timer.Start();
-		while (timer.Get() < 3)
-		{
-			testVal = 0;
-			drivetrain.Update(testVal, testVal);
-			frc::SmartDashboard::PutNumber("Timer: ", timer.Get());
-		}*/
+		ProcessDriveTrain();
+		ProcessWinch();
+		ProcessGearLift();
+		UpdateDashboard();
 
-		frc::SmartDashboard::PutNumber("Joystick Left: ", round(drivetrain.GetControllerValue(frc::GenericHID::kLeftHand), 2));
-		frc::SmartDashboard::PutNumber("Right Command: ", round(drivetrain.GetRightCommand(), 2));
-		frc::SmartDashboard::PutNumber("Right Speed: ", round(drivetrain.GetRightSpeed(), 2));
-
-		frc::SmartDashboard::PutNumber("Joystick Right: ", round(drivetrain.GetControllerValue(frc::GenericHID::kRightHand), 2));
-		frc::SmartDashboard::PutNumber("Left Command: ", round(drivetrain.GetLeftCommand(), 2));
-		frc::SmartDashboard::PutNumber("Left Speed: ", round(drivetrain.GetLeftSpeed(), 2));
-
-		frc::SmartDashboard::PutNumber("Gyro Angle: ", round(drivetrain.GetGyroAngle(), 2));
 	}
 
 	void TestPeriodic()
 	{
-		lw->Run();
+		//lw->Run();
+
+		if (m_winchMotor.IsStalled())
+			m_winchMotor.Stop();
+		else if (m_controller.GetBumper(frc::GenericHID::kLeftHand))
+			m_winchMotor.Raise();
+		else if (m_controller.GetBumper(frc::GenericHID::kRightHand))
+			m_winchMotor.Lower();
+		else
+			m_winchMotor.Stop();
+
 	}
+
+	void ProccesDriveTrain(void)
+	{
+		m_driveTrain.Update(m_leftControllerValue, m_rightControllerValue);
+	}
+
+	void ProcessWinch(void)
+	{
+		if (m_winchMotor.IsStalled())
+			m_winchMotor.Stop();
+		else if (m_controller.GetBumper(frc::GenericHID::kLeftHand))
+			m_winchMotor.Raise();
+		else if (m_controller.GetBumper(frc::GenericHID::kRightHand))
+			m_winchMotor.Lower();
+		else
+			m_winchMotor.Stop();
+	}
+
+	void ProcessGearLift(void)
+	{
+		double leftTrigger = m_controller.GetTriggerAxis(frc::GenericHID::kLeftHand);
+		double rightTrigger = m_controller.GetTriggerAxis(frc::GenericHID::kRightHand);
+
+		if (m_gearLift.IsStalled())
+			m_gearLift.Stop();
+		else if (leftTrigger > .2)
+			m_gearLift.Raise();
+		else
+			m_gearLift.Lower();
+
+		if (rightTrigger > .2)
+			m_gearLift.Clamp();
+		else
+			m_gearLift.Release();
+	}
+
+	void UpdateDashboard(void)
+	{
+/*
+		double centerX = 0;
+		axisCameraTable->GetNumber("x", centerX);
+		frc::SmartDashboard::PutNumber("Center X: ", centerX);
+		axisCameraTable = NetworkTable::GetTable("GRIP/myBlobsReport");
+ */
+
+		frc::SmartDashboard::PutNumber("Left Command: ", round(m_leftControllerValue, 2));
+		frc::SmartDashboard::PutNumber("Left Speed: ", round(m_driveTrain.GetLeftSpeed(), 2));
+		frc::SmartDashboard::PutNumber("Right Command: ", round(m_rightControllerValue, 2));
+		frc::SmartDashboard::PutNumber("Right Speed: ", round(m_driveTrain.GetRightSpeed(), 2));
+
+		frc::SmartDashboard::PutNumber("Gyro Angle: ", round(m_gyroAngle, 2));
+	}
+
+	double round(double value, int numDecimals)
+	{
+		return trunc(value * pow(10, numDecimals)) / pow(10, numDecimals);
+	}
+
 
 
 };
 
-double round(double value, int numDecimals)
-{
-	return trunc(value * pow(10, numDecimals)) / pow(10, numDecimals);
-}
 
 START_ROBOT_CLASS(Robot)

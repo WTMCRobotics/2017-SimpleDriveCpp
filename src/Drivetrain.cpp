@@ -24,16 +24,13 @@ void Drivetrain::Stop()
 	m_leftMotor2.Set(0.0);
 }
 
-void Drivetrain::Update(const double speedLimit)
+void Drivetrain::Update(double leftValue, double rightValue)
 {
-	double leftValue = controller.GetY(frc::GenericHID::kLeftHand);
-	double rightValue = controller.GetY(frc::GenericHID::kRightHand);
+	m_rightMotor1.Set(rightValue * m_speedFactor);
+	m_leftMotor1.Set(-leftValue * m_speedFactor);
 
-	m_rightMotor1.Set(rightValue * speedLimit);
-	m_leftMotor1.Set(-leftValue * speedLimit);
-
-	m_rightMotor2.Set(rightValue * speedLimit);
-	m_leftMotor2.Set(-leftValue * speedLimit);
+	m_rightMotor2.Set(rightValue * m_speedFactor);
+	m_leftMotor2.Set(-leftValue * m_speedFactor);
 }
 
 double Drivetrain::GetControllerValue(frc::GenericHID::JoystickHand hand)
