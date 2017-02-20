@@ -36,6 +36,8 @@ public:
 
 	double GetSpeedLimit(void) { return m_speedFactor; }
 	void SetSpeedLimit(double speedFactor) { m_speedFactor = speedFactor; }
+
+
 };
 
 #endif /* SRC_DRIVETRAIN_H_ */

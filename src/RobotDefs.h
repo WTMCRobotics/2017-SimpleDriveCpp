@@ -22,7 +22,8 @@
 #define STALL_CURRENT_WINCH 	4.0
 #define STALL_CURRENT_GEAR_LIFT	4.0
 // ToDo: test deadband value
-#define DRIVE_COMMAND_DEADBAND	0.02
+#define DRIVE_COMMAND_DEADBAND	0.2
+#define DRIVE_VOLTAGE_RAMP_SEC	12.0
 
 // Pneumatic Control Module
 //

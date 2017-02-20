@@ -49,8 +49,8 @@ private:
 	double m_angle[AUTO_MOVE_MAX_SEGMENTS];
 	double m_speed[AUTO_MOVE_MAX_SEGMENTS];
 
-	double m_leftControllerValue;
-	double m_rightControllerValue;
+	double m_leftJoystickY;
+	double m_rightJoystickY;
 	double m_gyroAngle;
 
 	frc::LiveWindow* lw = LiveWindow::GetInstance();
@@ -162,14 +162,15 @@ public:
 
 	void TeleopPeriodic()
 	{
-		m_leftControllerValue =m_controller.GetY(frc::GenericHID::kLeftHand);
-		m_rightControllerValue = m_controller.GetY(frc::GenericHID::kLeftHand);
+		m_leftJoystickY  = m_controller.GetY(frc::GenericHID::kLeftHand);
+		m_rightJoystickY = m_controller.GetY(frc::GenericHID::kRightHand);
 		m_gyroAngle = m_gyro.GetAngle();
 
 
 		ProcessDriveTrain();
-		ProcessWinch();
-		ProcessGearLift();
+//		ProcessWinch();
+//		ProcessGearLift();
+
 		UpdateDashboard();
 
 	}
@@ -189,9 +190,10 @@ public:
 
 	}
 
-	void ProccesDriveTrain(void)
+	void ProcessDriveTrain(void)
 	{
-		m_driveTrain.Update(m_leftControllerValue, m_rightControllerValue);
+
+		m_driveTrain.Update(m_leftJoystickY, m_rightJoystickY);
 	}
 
 	void ProcessWinch(void)
@@ -233,10 +235,13 @@ public:
 		axisCameraTable = NetworkTable::GetTable("GRIP/myBlobsReport");
  */
 
-		frc::SmartDashboard::PutNumber("Left Command: ", round(m_leftControllerValue, 2));
-		frc::SmartDashboard::PutNumber("Left Speed: ", round(m_driveTrain.GetLeftSpeed(), 2));
-		frc::SmartDashboard::PutNumber("Right Command: ", round(m_rightControllerValue, 2));
-		frc::SmartDashboard::PutNumber("Right Speed: ", round(m_driveTrain.GetRightSpeed(), 2));
+		frc::SmartDashboard::PutNumber("Left Joystick : ", round(m_leftJoystickY, 2));
+		frc::SmartDashboard::PutNumber("Left Command  : ", round(m_driveTrain.GetLeftTarget(), 2));
+		frc::SmartDashboard::PutNumber("Left Speed    : ", round(m_driveTrain.GetLeftSpeed(), 2));
+
+		frc::SmartDashboard::PutNumber("Right Joystick: ", round(m_rightJoystickY, 2));
+		frc::SmartDashboard::PutNumber("Right Command : ", round(m_driveTrain.GetRightTarget(), 2));
+		frc::SmartDashboard::PutNumber("Right Speed   : ", round(m_driveTrain.GetRightSpeed(), 2));
 
 		frc::SmartDashboard::PutNumber("Gyro Angle: ", round(m_gyroAngle, 2));
 	}

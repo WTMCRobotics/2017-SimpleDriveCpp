@@ -24,21 +24,24 @@
 #define MODE_Speed
 //#define MODE_Position
 
-const double PERCENT_SPEED = .2;
+
 
 class CANTalonDriveTrain
 {
 private:
+	const double MaxSpeed = 2000;	// max speed in RPM of wheels
+
 	// motor controllers
 	CANTalon m_rightMasterDrive {CAN_ID_RIGHTMASTER};
 	CANTalon m_leftMasterDrive  {CAN_ID_LEFTMASTER};
 	CANTalon m_rightSlaveDrive  {CAN_ID_RIGHTSLAVE};
 	CANTalon m_leftSlaveDrive   {CAN_ID_LEFTSLAVE};
 
+	double m_leftTarget  = 0.0;
+	double m_rightTarget = 0.0;
+
 	double m_leftSpeed	  = 0.0;
 	double m_rightSpeed   = 0.0;
-	double m_leftCommand  = 0.0;
-	double m_rightCommand = 0.0;
 
 	double m_speedFactor = 1.0;
 
@@ -57,11 +60,14 @@ public:
 	void SetSpeedFactor(double speedFactor) { m_speedFactor = fmax(0.0, fmin(m_speedFactor, 1.0)); }
 	double GetSpeedFactor(void) { return m_speedFactor; }
 
-	double GetLeftSpeed(void)    { return m_leftSpeed;}
-	double GetRightSpeed(void)   { return m_rightSpeed;}
+	double GetLeftTarget(void)	{ return m_leftTarget;}
+	double GetLeftSpeed(void)   { return m_leftSpeed;}
+
+	double GetRightTarget(void) { return m_rightTarget;}
+	double GetRightSpeed(void)  { return m_rightSpeed;}
 
 private:
-	double CANTalonDriveTrain::SetDeadband(double commandValue);
+	double Deadband(double commandValue);
 
 };
 

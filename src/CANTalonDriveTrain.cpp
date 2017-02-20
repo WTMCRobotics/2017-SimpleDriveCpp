@@ -27,7 +27,7 @@ CANTalonDriveTrain::CANTalonDriveTrain(frc::XboxController* pController, frc::AD
 	m_rightMasterDrive.SetFeedbackDevice(CANTalon::QuadEncoder);
 	m_rightMasterDrive.ConfigEncoderCodesPerRev(2048);
 	m_rightMasterDrive.ConfigPeakOutputVoltage(+12.0f, -12.0f);
-	m_rightMasterDrive.SetVoltageRampRate(7);
+	m_rightMasterDrive.SetVoltageRampRate(DRIVE_VOLTAGE_RAMP_SEC);
 	m_rightMasterDrive.SetSensorDirection(true);
 
 	m_leftMasterDrive.SetControlMode(CANSpeedController::kSpeed);
@@ -35,7 +35,7 @@ CANTalonDriveTrain::CANTalonDriveTrain(frc::XboxController* pController, frc::AD
 	m_leftMasterDrive.SetFeedbackDevice(CANTalon::QuadEncoder);
 	m_leftMasterDrive.ConfigEncoderCodesPerRev(2048);
 	m_leftMasterDrive.ConfigPeakOutputVoltage(+12.0f, -12.0f);
-	m_leftMasterDrive.SetVoltageRampRate(7);
+	m_leftMasterDrive.SetVoltageRampRate(DRIVE_VOLTAGE_RAMP_SEC);
 	m_leftMasterDrive.SetSensorDirection(true);
 
 #elif defined(MODE_Position)
@@ -71,19 +71,20 @@ void CANTalonDriveTrain::Stop(void)
 
 void CANTalonDriveTrain::Update(double leftCommand, double rightCommand)
 {
+	m_leftTarget  = Deadband(leftCommand)  * MaxSpeed * m_speedFactor;
+	m_rightTarget = Deadband(rightCommand) * MaxSpeed * m_speedFactor;
 
-	m_leftSpeed = SetDeadband(m_leftCommand);
-	m_rightSpeed = SetDeadband(m_rightCommand);
+	m_leftMasterDrive.Set(-m_leftTarget);
+	m_rightMasterDrive.Set(m_rightTarget);
 
-	m_leftMasterDrive.Set(-m_leftSpeed);
-	m_rightMasterDrive.Set(m_rightSpeed);
+	m_leftSpeed = m_leftMasterDrive.GetSpeed();
+	m_rightSpeed = m_rightMasterDrive.GetSpeed();
+
 }
 
-double CANTalonDriveTrain::SetDeadband(double commandValue)
+double CANTalonDriveTrain::Deadband(double commandValue)
 {
-	if (commandValue <= DRIVE_COMMAND_DEADBAND && commandValue >= -DRIVE_COMMAND_DEADBAND)
-		return 0.0;
-
-	return commandValue;
+	//return commandValue;
+	return (fabs(commandValue) >= DRIVE_COMMAND_DEADBAND) ? commandValue : 0.0;
 }
 

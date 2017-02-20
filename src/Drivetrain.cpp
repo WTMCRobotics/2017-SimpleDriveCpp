@@ -33,12 +33,3 @@ void Drivetrain::Update(double leftValue, double rightValue)
 	m_leftMotor2.Set(-leftValue * m_speedFactor);
 }
 
-double Drivetrain::GetControllerValue(frc::GenericHID::JoystickHand hand)
-{
-	return controller.GetY(hand);
-}
-
-double Drivetrain::GetGyroAngle()
-{
-	return gyro.GetAngle();
-}
