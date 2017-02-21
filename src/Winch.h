@@ -14,8 +14,10 @@
 #include <PowerDistributionPanel.h>
 
 
-#define RAISE_SPEED  0.40
-#define LOWER_SPEED 0.40
+#define RAISE_SLOW_SPEED  -0.3
+#define RAISE_FAST_SPEED  -0.9
+
+#define LOWER_SPEED 0.1
 
 
 class Winch
@@ -31,7 +33,7 @@ public:
 	virtual ~Winch();
 
 	void Stop(void);
-	void Raise(void);
+	void Raise(bool bFastSpeed);
 	void Lower(void);
 	bool IsStalled(void);
 

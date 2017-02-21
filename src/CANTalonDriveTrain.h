@@ -33,9 +33,9 @@ private:
 
 	// motor controllers
 	CANTalon m_rightMasterDrive {CAN_ID_RIGHTMASTER};
-	CANTalon m_leftMasterDrive  {CAN_ID_LEFTMASTER};
 	CANTalon m_rightSlaveDrive  {CAN_ID_RIGHTSLAVE};
 	CANTalon m_leftSlaveDrive   {CAN_ID_LEFTSLAVE};
+	CANTalon m_leftMasterDrive  {CAN_ID_LEFTMASTER};
 
 	double m_leftTarget  = 0.0;
 	double m_rightTarget = 0.0;
@@ -43,7 +43,7 @@ private:
 	double m_leftSpeed	  = 0.0;
 	double m_rightSpeed   = 0.0;
 
-	double m_speedFactor = 1.0;
+	double m_speedFactor = .25;
 
 	// pointers to global objects
 	frc::XboxController* m_pController;

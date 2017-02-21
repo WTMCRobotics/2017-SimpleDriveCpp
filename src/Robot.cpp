@@ -16,20 +16,11 @@
 
 #include <PowerDistributionPanel.h>
 #include <ADXRS450_Gyro.h>
+#include <DigitalInput.h>
 
 #include "CANTalonDrivetrain.h"
 #include "Winch.h"
 #include "GearLift.h"
-
-
-// forward declarations
-//
-void ProcessDriveTrain(void);
-void ProcessWinch(void);
-void ProcessGearLift(void);
-void UpdateDashboard(void);
-
-double round(double value, int numDecimals);
 
 
 const double maxSpeed = 2000;
@@ -41,6 +32,9 @@ private:
 	frc::PowerDistributionPanel	m_PDP {0};
 	frc::XboxController	m_controller{0};
 	frc::ADXRS450_Gyro 	m_gyro{frc::SPI::kOnboardCS0};
+	DigitalInput m_diGearLiftDown {DIO_SWITCH_GEARLIFT_DOWN};
+	DigitalInput m_diGearLiftUp   {DIO_SWITCH_GEARLIFT_UP};
+
 	CANTalonDriveTrain 	m_driveTrain {&m_controller, &m_gyro};
 	Winch 				m_winchMotor {&m_PDP};
 	GearLift			m_gearLift   {};
@@ -52,6 +46,11 @@ private:
 	double m_leftJoystickY;
 	double m_rightJoystickY;
 	double m_gyroAngle;
+	double m_leftTrigger;
+	double m_rightTrigger;
+	bool m_gearLiftIsDown;
+	bool m_gearLiftIsUp;
+	bool m_gearLiftIsClamped;
 
 	frc::LiveWindow* lw = LiveWindow::GetInstance();
 
@@ -166,64 +165,76 @@ public:
 		m_rightJoystickY = m_controller.GetY(frc::GenericHID::kRightHand);
 		m_gyroAngle = m_gyro.GetAngle();
 
+		m_leftTrigger = m_controller.GetTriggerAxis(frc::GenericHID::kLeftHand);
+		m_rightTrigger = m_controller.GetTriggerAxis(frc::GenericHID::kRightHand);
 
-		ProcessDriveTrain();
-//		ProcessWinch();
-//		ProcessGearLift();
+		// The gear lift switched are N/O switches that pull the input to ground when
+		//	they are closed. The state of the actual switches are inverted, since otherwise
+		//	the "pull-to-ground" wiring would result in negative logic.
+		//
+		//	For testing purposes without the actual gear lift mechanism, the Down switch is inverted from what is should be.
+#warning "GearLift Down switch is inverted for testing"
+		m_gearLiftIsDown = m_diGearLiftDown.Get(); //**********************************************************inverted for testing
+		m_gearLiftIsUp   = !m_diGearLiftUp.Get();
+
+		UpdateDriveTrain();
+		UpdateWinch();
+		UpdateGearLift();
 
 		UpdateDashboard();
-
 	}
 
 	void TestPeriodic()
 	{
 		//lw->Run();
 
-		if (m_winchMotor.IsStalled())
-			m_winchMotor.Stop();
-		else if (m_controller.GetBumper(frc::GenericHID::kLeftHand))
-			m_winchMotor.Raise();
-		else if (m_controller.GetBumper(frc::GenericHID::kRightHand))
-			m_winchMotor.Lower();
-		else
-			m_winchMotor.Stop();
-
 	}
 
-	void ProcessDriveTrain(void)
+	void UpdateDriveTrain(void)
 	{
-
 		m_driveTrain.Update(m_leftJoystickY, m_rightJoystickY);
 	}
 
-	void ProcessWinch(void)
+	void UpdateWinch(void)
 	{
 		if (m_winchMotor.IsStalled())
+		{
 			m_winchMotor.Stop();
-		else if (m_controller.GetBumper(frc::GenericHID::kLeftHand))
-			m_winchMotor.Raise();
-		else if (m_controller.GetBumper(frc::GenericHID::kRightHand))
-			m_winchMotor.Lower();
+			return;
+		}
+
+		if (m_controller.GetBumper(frc::GenericHID::kLeftHand))
+			m_winchMotor.Raise(m_controller.GetBumper(frc::GenericHID::kRightHand));
 		else
 			m_winchMotor.Stop();
 	}
 
-	void ProcessGearLift(void)
+	void UpdateGearLift(void)
 	{
-		double leftTrigger = m_controller.GetTriggerAxis(frc::GenericHID::kLeftHand);
-		double rightTrigger = m_controller.GetTriggerAxis(frc::GenericHID::kRightHand);
 
+		// gear lifting logic
+		//
 		if (m_gearLift.IsStalled())
 			m_gearLift.Stop();
-		else if (leftTrigger > .2)
+		else if (m_leftTrigger > GEARLIFT_COMMAND_DEADBAND && !m_gearLiftIsUp)
 			m_gearLift.Raise();
-		else
+		else if (m_leftTrigger <= GEARLIFT_COMMAND_DEADBAND && !m_gearLiftIsDown)
 			m_gearLift.Lower();
-
-		if (rightTrigger > .2)
-			m_gearLift.Clamp();
 		else
+			m_gearLift.Stop();
+
+		// gear clamping logic
+		//
+		if (m_rightTrigger > GEARLIFT_COMMAND_DEADBAND)
+		{
+			m_gearLift.Clamp();
+			m_gearLiftIsClamped = true;
+		}
+		else
+		{
 			m_gearLift.Release();
+			m_gearLiftIsClamped = false;
+		}
 	}
 
 	void UpdateDashboard(void)
@@ -242,6 +253,10 @@ public:
 		frc::SmartDashboard::PutNumber("Right Joystick: ", round(m_rightJoystickY, 2));
 		frc::SmartDashboard::PutNumber("Right Command : ", round(m_driveTrain.GetRightTarget(), 2));
 		frc::SmartDashboard::PutNumber("Right Speed   : ", round(m_driveTrain.GetRightSpeed(), 2));
+
+		frc::SmartDashboard::PutNumber("GearLift Up   : ", m_gearLiftIsUp);
+		frc::SmartDashboard::PutNumber("GearLift Down : ", m_gearLiftIsDown);
+		frc::SmartDashboard::PutNumber("GearLift Clamp: ", m_gearLiftIsClamped);
 
 		frc::SmartDashboard::PutNumber("Gyro Angle: ", round(m_gyroAngle, 2));
 	}
