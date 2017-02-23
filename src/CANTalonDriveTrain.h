@@ -45,6 +45,11 @@ private:
 
 	double m_speedFactor = .25;
 
+	double m_startPosition 	 = 0.0;
+	double m_endPosition	 = 0.0;
+	double m_currentPosition = 0.0;
+	double m_deltaPosition 	 = 0.0;
+
 	// pointers to global objects
 	frc::XboxController* m_pController;
 	frc::ADXRS450_Gyro*  m_pGyro;
@@ -57,6 +62,12 @@ public:
 	void Stop();
 	void Update(double rightCommand, double leftCommand);
 
+	void AutoTurnStart(double currentAngle, double deltaAngle);
+	bool AutoTurnUpdate(double currentAngle);
+	void AutoMoveStart(double legLength, double velocity);
+	bool AutoMoveUpdate(void);
+
+
 	void SetSpeedFactor(double speedFactor) { m_speedFactor = fmax(0.0, fmin(m_speedFactor, 1.0)); }
 	double GetSpeedFactor(void) { return m_speedFactor; }
 
@@ -65,6 +76,11 @@ public:
 
 	double GetRightTarget(void) { return m_rightTarget;}
 	double GetRightSpeed(void)  { return m_rightSpeed;}
+
+	double GetStartPosition(void) { return m_startPosition;}
+	double GetEndPosition(void)  { return m_endPosition;}
+	double GetCurrentPosition(void) { return m_currentPosition;}
+	double GetDeltaPosition(void)  { return m_deltaPosition;}
 
 private:
 	double Deadband(double commandValue);

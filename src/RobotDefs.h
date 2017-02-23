@@ -50,26 +50,26 @@
 #define AUTO_MOVE_MAX_SEGMENTS	3
 
 // left starting position
-#define kLeftAngle1		0.0
-#define kLeftLeg1		  1000.0
-#define kLeftSpeed1		  200.0
+#define kLeftAngle1		+0.0
+#define kLeftLeg1		  4.75
+#define kLeftSpeed1		  250.0
 #define kLeftAngle2		60.0
 #define kLeftLeg2		  50.0
-#define kLeftSpeed2		  200.0
+#define kLeftSpeed2		  250.0
 
 // right starting position
-#define kRightAngle1	0.0
-#define kRightLeg1		  1000.0
+#define kRightAngle1	+0.0
+#define kRightLeg1		  4.75
 #define kRightSpeed1	  200.0
 #define kRightAngle2	-60.0
-#define kRightLeg2		  50.0
+#define kRightLeg2		  2.8
 #define kRightSpeed2	  200.0
 
 // center starting position
-#define kMidAngle1		0.0
+#define kMidAngle1		+0.0
 #define kMidLeg1		  1000.0
 #define kMidSpeed1		  200.0
-#define kMidAngle2		45.0
+#define kMidAngle2		+45.0
 #define kMidLeg2		  50.0
 #define kMidSpeed2		  200.0
 #define kMidAngle3		-45.0

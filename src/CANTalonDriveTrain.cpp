@@ -28,7 +28,7 @@ CANTalonDriveTrain::CANTalonDriveTrain(frc::XboxController* pController, frc::AD
 	m_rightMasterDrive.ConfigEncoderCodesPerRev(2048);
 	m_rightMasterDrive.ConfigPeakOutputVoltage(+12.0f, -12.0f);
 	m_rightMasterDrive.SetVoltageRampRate(DRIVE_VOLTAGE_RAMP_SEC);
-	m_rightMasterDrive.SetSensorDirection(false);
+	m_rightMasterDrive.SetSensorDirection(true);
 
 	m_leftMasterDrive.SetControlMode(CANSpeedController::kSpeed);
 	m_leftMasterDrive.Set(0.0);
@@ -36,7 +36,7 @@ CANTalonDriveTrain::CANTalonDriveTrain(frc::XboxController* pController, frc::AD
 	m_leftMasterDrive.ConfigEncoderCodesPerRev(2048);
 	m_leftMasterDrive.ConfigPeakOutputVoltage(+12.0f, -12.0f);
 	m_leftMasterDrive.SetVoltageRampRate(DRIVE_VOLTAGE_RAMP_SEC);
-	m_leftMasterDrive.SetSensorDirection(false);
+	m_leftMasterDrive.SetSensorDirection(true);
 
 #elif defined(MODE_Position)
 	m_rightMasterDrive.SetControlMode(CANSpeedController::kPosition);
@@ -79,8 +79,68 @@ void CANTalonDriveTrain::Update(double leftCommand, double rightCommand)
 
 	m_leftSpeed = m_leftMasterDrive.GetSpeed();
 	m_rightSpeed = m_rightMasterDrive.GetSpeed();
-
 }
+
+void CANTalonDriveTrain::AutoTurnStart(double currentAngle, double deltaAngle)
+{
+	m_startPosition = currentAngle;
+	m_endPosition = fmod((m_startPosition + deltaAngle), 360.0);
+
+	double velocity = (deltaAngle < 0) ? -100 : 100;
+	m_leftMasterDrive.Set(velocity);
+	m_rightMasterDrive.Set(velocity);
+
+	m_leftSpeed = m_leftMasterDrive.GetSpeed();
+	m_rightSpeed = m_rightMasterDrive.GetSpeed();
+}
+
+bool CANTalonDriveTrain::AutoTurnUpdate(double currentAngle)
+{
+	m_currentPosition = currentAngle;
+	m_deltaPosition = m_endPosition - m_currentPosition;
+
+	m_leftSpeed = m_leftMasterDrive.GetSpeed();
+	m_rightSpeed = m_rightMasterDrive.GetSpeed();
+
+	if (m_deltaPosition > 0)
+	{
+		Stop();
+		return true;
+	}
+
+	return false;
+}
+
+void CANTalonDriveTrain::AutoMoveStart(double legLength, double velocity)
+{
+	m_startPosition = m_leftMasterDrive.GetPosition();
+	m_endPosition = m_startPosition - legLength;
+
+	m_leftMasterDrive.Set(velocity);
+	m_rightMasterDrive.Set(-velocity);
+
+	m_leftSpeed = m_leftMasterDrive.GetSpeed();
+	m_rightSpeed = m_rightMasterDrive.GetSpeed();
+}
+
+bool CANTalonDriveTrain::AutoMoveUpdate(void)
+{
+	m_currentPosition = m_leftMasterDrive.GetPosition();
+	m_deltaPosition = m_endPosition - m_currentPosition;
+
+	m_leftSpeed = m_leftMasterDrive.GetSpeed();
+	m_rightSpeed = m_rightMasterDrive.GetSpeed();
+
+	if (m_deltaPosition > 0)
+	{
+		Stop();
+		return true;
+	}
+
+	return false;
+}
+
+
 
 double CANTalonDriveTrain::Deadband(double commandValue)
 {

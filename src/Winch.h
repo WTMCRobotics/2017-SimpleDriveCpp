@@ -14,10 +14,9 @@
 #include <PowerDistributionPanel.h>
 
 
-#define RAISE_SLOW_SPEED  -0.3
-#define RAISE_FAST_SPEED  -0.9
+#define CLIMB_SLOW_SPEED  -0.3
+#define CLIMB_FAST_SPEED  -0.9
 
-#define LOWER_SPEED 0.1
 
 
 class Winch

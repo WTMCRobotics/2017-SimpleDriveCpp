@@ -25,16 +25,16 @@ void Winch::Stop()
 void Winch::Raise(bool bFastSpeed)
 {
 	if (bFastSpeed)
-		m_winchMotor.Set(RAISE_FAST_SPEED);
+		m_winchMotor.Set(CLIMB_FAST_SPEED);
 	else
-		m_winchMotor.Set(RAISE_SLOW_SPEED);
+		m_winchMotor.Set(CLIMB_SLOW_SPEED);
 
 	m_winchCurrent = m_pPDP->GetCurrent(PDP_CHANEL_WINCH);
 }
 
 void Winch::Lower()
 {
-	m_winchMotor.Set(LOWER_SPEED);
+	m_winchMotor.Set(CLIMB_SLOW_SPEED);
 	m_winchCurrent = m_pPDP->GetCurrent(PDP_CHANEL_WINCH);
 }
 
