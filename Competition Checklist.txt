@@ -1,0 +1,2 @@
+1. Test Practice/Competition jumper
+2. Check Talon SRX PID gains

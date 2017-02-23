@@ -23,6 +23,7 @@
 #include "GearLift.h"
 
 
+bool g_bPracticeRobot = false;
 const double maxSpeed = 2000;
 
 class Robot: public frc::IterativeRobot
@@ -32,8 +33,9 @@ private:
 	frc::PowerDistributionPanel	m_PDP {0};
 	frc::XboxController	m_controller{0};
 	frc::ADXRS450_Gyro 	m_gyro{frc::SPI::kOnboardCS0};
-	DigitalInput m_diGearLiftDown {DIO_SWITCH_GEARLIFT_DOWN};
-	DigitalInput m_diGearLiftUp   {DIO_SWITCH_GEARLIFT_UP};
+	DigitalInput m_diGearLiftDown  {DIO_SWITCH_GEARLIFT_DOWN};
+	DigitalInput m_diGearLiftUp    {DIO_SWITCH_GEARLIFT_UP};
+	DigitalInput m_diPracticeRobot {DIO_PRACTICE_ROBOT};
 
 	CANTalonDriveTrain 	m_driveTrain {&m_controller, &m_gyro};
 	Winch 				m_winchMotor {&m_PDP};
@@ -84,6 +86,9 @@ public:
 
 	void RobotInit()
 	{
+		// Jumper is installed on Practice Robot, which pulls DI low
+		g_bPracticeRobot = !m_diPracticeRobot.Get();
+
 		startPositionSelector.AddObject(StartPositionLeft,   StartPositionLeft);
 		startPositionSelector.AddObject(StartPositionCenter, StartPositionCenter);
 		startPositionSelector.AddObject(StartPositionRight,  StartPositionRight);
@@ -273,7 +278,7 @@ public:
 		//
 		//	For testing purposes without the actual gear lift mechanism, the Down switch is inverted from what is should be.
 #warning "GearLift Down switch is inverted for testing"
-		m_gearLiftIsDown = m_diGearLiftDown.Get(); //**********************************************************inverted for testing
+		m_gearLiftIsDown = m_diGearLiftDown.Get();
 		m_gearLiftIsUp   = !m_diGearLiftUp.Get();
 
 		UpdateDriveTrain();
@@ -345,6 +350,8 @@ public:
 		frc::SmartDashboard::PutNumber("Center X: ", centerX);
 		axisCameraTable = NetworkTable::GetTable("GRIP/myBlobsReport");
  */
+
+		frc::SmartDashboard::PutString("Robot : ", (g_bPracticeRobot) ? "Practice Robot" : "Competition Robot");
 
 		frc::SmartDashboard::PutNumber("Left Joystick : ", round(m_leftJoystickY, 2));
 		frc::SmartDashboard::PutNumber("Left Command  : ", round(m_driveTrain.GetLeftTarget(), 2));

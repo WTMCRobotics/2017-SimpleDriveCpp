@@ -38,6 +38,7 @@
 //
 #define	DIO_SWITCH_GEARLIFT_DOWN	0
 #define	DIO_SWITCH_GEARLIFT_UP		1
+#define	DIO_PRACTICE_ROBOT			9
 
 // Pneumatic Control Module
 //
