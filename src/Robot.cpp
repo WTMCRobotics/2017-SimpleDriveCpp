@@ -2,9 +2,11 @@
 #include <memory>
 #include <string>
 #include <cmath>
+
 #include <Timer.h>
 
 #include <IterativeRobot.h>
+#include <DriverStation.h>
 #include <LiveWindow/LiveWindow.h>
 #include <SmartDashboard/SendableChooser.h>
 #include <SmartDashboard/Sendable.h>
@@ -33,32 +35,35 @@ private:
 	frc::PowerDistributionPanel	m_PDP {0};
 	frc::XboxController	m_controller{0};
 	frc::ADXRS450_Gyro 	m_gyro{frc::SPI::kOnboardCS0};
-	DigitalInput m_diGearLiftDown  {DIO_SWITCH_GEARLIFT_DOWN};
-	DigitalInput m_diGearLiftUp    {DIO_SWITCH_GEARLIFT_UP};
-	DigitalInput m_diPracticeRobot {DIO_PRACTICE_ROBOT};
+
+	DriverStation::Alliance m_allianceColor;
+	int m_allianceLocation;
+
 
 	CANTalonDriveTrain 	m_driveTrain {&m_controller, &m_gyro};
 	Winch 				m_winchMotor {&m_PDP};
 	GearLift			m_gearLift   {};
+	DigitalInput 		m_diPracticeRobot {DIO_PRACTICE_ROBOT};
 
-	double m_leftJoystickY;
-	double m_rightJoystickY;
-	double m_gyroAngle;
-	double m_leftTrigger;
-	double m_rightTrigger;
-	bool m_gearLiftIsDown;
-	bool m_gearLiftIsUp;
-	bool m_gearLiftIsClamped;
+	double 	m_gyroAngle;
+	double 	m_leftJoystickY;
+	double 	m_rightJoystickY;
+	double 	m_leftTrigger;
+	double 	m_rightTrigger;
+	bool   	m_bLeftBumper;
+	bool   	m_bRightBumper;
+	bool	m_bButtonA;
+	bool	m_bButtonB;
+	bool	m_bButtonX;
+	bool	m_bButtonY;
 
 	frc::LiveWindow* lw = LiveWindow::GetInstance();
 
-	frc::SendableChooser<std::string> startPositionSelector;
-	const std::string StartPositionLeft	  = "Left Start";
-	const std::string StartPositionCenter = "Middle Start";
-	const std::string StartPositionRight  = "Right Start";
-	std::string startPosition;
 	std::shared_ptr<NetworkTable> axisCameraTable;
 
+
+	// autonomous states
+	//
 	typedef enum
 	{
 		autoStart,
@@ -67,8 +72,9 @@ private:
 		autoDone
 	} eAutonomousState;
 
-	eAutonomousState m_autoState = autoStart;
 
+	// traverse states
+	//
 	typedef enum
 	{
 		traverseNext,
@@ -77,6 +83,8 @@ private:
 		traverseDone
 	} eTraverseState;
 
+
+	eAutonomousState m_autoState = autoStart;
 	eTraverseState m_traverseState = traverseDone;
 	int m_traverseIndex = 0;
 
@@ -86,13 +94,13 @@ public:
 
 	void RobotInit()
 	{
+		m_allianceColor    = DriverStation::GetInstance().GetAlliance();
+		m_allianceLocation = DriverStation::GetInstance().GetLocation();
+		std::cout << "Alliance Color   : " << m_allianceColor << std::endl;
+		std::cout << "Alliance Location: " << m_allianceLocation << std::endl;
+
 		// Jumper is installed on Practice Robot, which pulls DI low
 		g_bPracticeRobot = !m_diPracticeRobot.Get();
-
-		startPositionSelector.AddObject(StartPositionLeft,   StartPositionLeft);
-		startPositionSelector.AddObject(StartPositionCenter, StartPositionCenter);
-		startPositionSelector.AddObject(StartPositionRight,  StartPositionRight);
-		frc::SmartDashboard::PutData("Auto Modes", &startPositionSelector);
 
 		frc::CameraServer::GetInstance()->StartAutomaticCapture("Driving Camera", 0);
 
@@ -107,15 +115,20 @@ public:
 	//=================================================================================
 	// Autonomous Initialize
 	//
+	//	Starting Location key:
+	//			+-----------------+
+	//		 	| 1				1 |
+	//	Blue 	| x 			x | Red
+	//	Alliance| 2				2 | Alliance
+	//		 	| 3				3 |
+	//			+-----------------+
+	//
 	void AutonomousInit() override
 	{
-		m_autoState = autoStart;
 		m_traverseIndex = 0;
 
-		startPosition = startPositionSelector.GetSelected();
-		// std::string startPosition = SmartDashboard::GetString("Auto Selector", autoNameDefault);
-		std::cout << "Auto selected: " << startPosition << std::endl;
-
+		// clear all traverse segments
+		//
 		for (int i=0; i<AUTO_MOVE_MAX_SEGMENTS; i++)
 		{
 			m_distance[i] = 0.0;
@@ -123,39 +136,58 @@ public:
 			m_angle[i] = 0.0;
 		}
 
-		if (startPosition == StartPositionLeft)
+		// The autonomous traverse path depends on the starting location
+		//
+		switch (m_allianceLocation)
 		{
-			m_angle[0] 		= kLeftAngle1;
-			m_distance[0] 	= kLeftLeg1;
-			m_speed[0]		= kLeftSpeed1;
-			m_angle[1] 		= kLeftAngle2;
-			m_distance[1] 	= kLeftLeg2;
-			m_speed[1]		= kLeftSpeed2;
+		case 1:
+			m_angle[0] 		= kStart1Angle0;
+			m_distance[0] 	= kStart1Leg0;
+			m_speed[0]		= kStart1Speed0;
+			m_angle[1] 		= kStart1Angle1;
+			m_distance[1] 	= kStart1Leg1;
+			m_speed[1]		= kStart1Speed1;
+			break;
+		case 2:
+			m_angle[0] 		= kStart2Angle0;
+			m_distance[0] 	= kStart2Leg0;
+			m_speed[0]		= kStart2Speed0;
+			m_angle[1] 		= kStart2Angle1;
+			m_distance[1] 	= kStart2Leg1;
+			m_speed[1]		= kStart2Speed1;
+			m_angle[2] 		= kStart2Angle2;
+			m_distance[2] 	= kStart2Leg2;
+			m_speed[2]		= kStart2Speed2;
+			break;
+		case 3:
+			m_angle[0] 		= kStart3Angle0;
+			m_distance[0] 	= kStart3Leg0;
+			m_speed[0]		= kStart3Speed0;
+			m_angle[1] 		= kStart3Angle1;
+			m_distance[1] 	= kStart3Leg1;
+			m_speed[2]		= kStart3Speed1;
+			break;
+		default:
+			break;
 		}
-		else if (startPosition == StartPositionCenter)
+
+		// Autonomous traverse path was calculated from Red Alliance starting location.
+		//	If the actual alliance is Red, the angles need to be flipped.
+		//
+		if (m_allianceColor == DriverStation::Alliance::kBlue)
 		{
-			m_angle[0] 		= kMidAngle1;
-			m_distance[0] 	= kMidLeg1;
-			m_speed[0]		= kMidSpeed1;
-			m_angle[1] 		= kMidAngle2;
-			m_distance[1] 	= kMidLeg2;
-			m_speed[1]		= kMidSpeed2;
-			m_angle[2] 		= kMidAngle3;
-			m_distance[2] 	= kMidLeg3;
-			m_speed[2]		= kMidSpeed3;
-		}
-		else if (startPosition == StartPositionRight)
-		{
-			m_angle[0] 		= kRightAngle1;
-			m_distance[0] 	= kRightLeg1;
-			m_speed[0]		= kRightSpeed1;
-			m_angle[1] 		= kRightAngle2;
-			m_distance[1] 	= kRightLeg2;
-			m_speed[2]		= kRightSpeed2;
+			for (int i=0; i<AUTO_MOVE_MAX_SEGMENTS; i++)
+				m_angle[i] 	  = -m_angle[i];
+
 		}
 	}
 
 
+	//=================================================================================
+	// Autonomous Periodic
+	//
+	//	Step through Autonomous State Machine
+	//
 	void AutonomousPeriodic()
 	{
 		switch (m_autoState)
@@ -182,8 +214,6 @@ public:
 	double m_distance[AUTO_MOVE_MAX_SEGMENTS];
 	double m_angle[AUTO_MOVE_MAX_SEGMENTS];
 	double m_speed[AUTO_MOVE_MAX_SEGMENTS];
-
-
 
 	bool AutoTraverse(void)
 	{
@@ -220,38 +250,52 @@ public:
 			}
 		}
 
-
 		return false;
 	}
 
 	void TeleopInit()
 	{
 		m_driveTrain.Stop();
+
+		frc::SmartDashboard::PutString("Alliance Color    : ", (m_allianceColor == DriverStation::Alliance::kRed) ? "Red" : "Blue");
+		frc::SmartDashboard::PutNumber("Alliance Location : ", m_allianceLocation);
 	}
 
 	void InitTraverse(void)
 	{
-		m_angle[0] 		= kRightAngle1;
-		m_distance[0] 	= kRightLeg1;
-		m_speed[0]		= kRightSpeed1;
-		m_angle[1] 		= kRightAngle2;
-		m_distance[1] 	= kRightLeg2;
-		m_speed[1]		= kRightSpeed2;
+		m_angle[0] 		= kStart1Angle0;
+		m_distance[0] 	= kStart1Leg0;
+		m_speed[0]		= kStart1Speed0;
+		m_angle[1] 		= kStart1Angle1;
+		m_distance[1] 	= kStart1Leg1;
+		m_speed[1]		= kStart1Speed1;
 		m_traverseState = traverseNext;
 		m_traverseIndex = 0;
 	}
 
-
-	void TeleopPeriodic()
+	void UpdateControlData()
 	{
+		m_gyroAngle = m_gyro.GetAngle();
 		m_leftJoystickY  = m_controller.GetY(frc::GenericHID::kLeftHand);
 		m_rightJoystickY = m_controller.GetY(frc::GenericHID::kRightHand);
-		m_gyroAngle = m_gyro.GetAngle();
 
 		m_leftTrigger = m_controller.GetTriggerAxis(frc::GenericHID::kLeftHand);
 		m_rightTrigger = m_controller.GetTriggerAxis(frc::GenericHID::kRightHand);
 
+		m_bLeftBumper = m_controller.GetBumper(frc::GenericHID::kLeftHand);
+		m_bRightBumper = m_controller.GetBumper(frc::GenericHID::kLeftHand);
 
+		m_bButtonA = m_controller.GetAButton();
+		m_bButtonB = m_controller.GetBButton();
+		m_bButtonX = m_controller.GetXButton();
+		m_bButtonY = m_controller.GetYButton();
+	}
+
+	void TeleopPeriodic()
+	{
+		UpdateControlData();
+
+/*
 		if (m_controller.GetAButton() )
 		{
 			if (m_autoState == autoTraverse)
@@ -270,20 +314,12 @@ public:
 		UpdateDashboard();
 
 		return;
+*/
 
 
-		// The gear lift switched are N/O switches that pull the input to ground when
-		//	they are closed. The state of the actual switches are inverted, since otherwise
-		//	the "pull-to-ground" wiring would result in negative logic.
-		//
-		//	For testing purposes without the actual gear lift mechanism, the Down switch is inverted from what is should be.
-#warning "GearLift Down switch is inverted for testing"
-		m_gearLiftIsDown = m_diGearLiftDown.Get();
-		m_gearLiftIsUp   = !m_diGearLiftUp.Get();
-
-		UpdateDriveTrain();
-		UpdateWinch();
-		UpdateGearLift();
+		m_driveTrain.Update(m_leftJoystickY, m_rightJoystickY, m_bLeftBumper);
+		m_gearLift.Update(m_bButtonA, m_bButtonB);
+		m_winchMotor.Update(m_leftTrigger);
 
 		UpdateDashboard();
 	}
@@ -293,53 +329,6 @@ public:
 		//lw->Run();
 
 
-	}
-
-	void UpdateDriveTrain(void)
-	{
-		m_driveTrain.Update(m_leftJoystickY, m_rightJoystickY);
-	}
-
-	void UpdateWinch(void)
-	{
-		if (m_winchMotor.IsStalled())
-		{
-			m_winchMotor.Stop();
-			return;
-		}
-
-		if (m_controller.GetBumper(frc::GenericHID::kLeftHand))
-			m_winchMotor.Raise(m_controller.GetBumper(frc::GenericHID::kRightHand));
-		else
-			m_winchMotor.Stop();
-	}
-
-	void UpdateGearLift(void)
-	{
-
-		// gear lifting logic
-		//
-		if (m_gearLift.IsStalled())
-			m_gearLift.Stop();
-		else if (m_leftTrigger > GEARLIFT_COMMAND_DEADBAND && !m_gearLiftIsUp)
-			m_gearLift.Raise();
-		else if (m_leftTrigger <= GEARLIFT_COMMAND_DEADBAND && !m_gearLiftIsDown)
-			m_gearLift.Lower();
-		else
-			m_gearLift.Stop();
-
-		// gear clamping logic
-		//
-		if (m_rightTrigger > GEARLIFT_COMMAND_DEADBAND)
-		{
-			m_gearLift.Clamp();
-			m_gearLiftIsClamped = true;
-		}
-		else
-		{
-			m_gearLift.Release();
-			m_gearLiftIsClamped = false;
-		}
 	}
 
 	void UpdateDashboard(void)
@@ -361,9 +350,10 @@ public:
 		frc::SmartDashboard::PutNumber("Right Command : ", round(m_driveTrain.GetRightTarget(), 2));
 		frc::SmartDashboard::PutNumber("Right Speed   : ", round(m_driveTrain.GetRightSpeed(), 2));
 
-		frc::SmartDashboard::PutNumber("GearLift Up   : ", m_gearLiftIsUp);
-		frc::SmartDashboard::PutNumber("GearLift Down : ", m_gearLiftIsDown);
-		frc::SmartDashboard::PutNumber("GearLift Clamp: ", m_gearLiftIsClamped);
+		frc::SmartDashboard::PutNumber("GearLift Up   : ", m_gearLift.IsUp());
+		frc::SmartDashboard::PutNumber("GearLift Down : ", m_gearLift.IsDown());
+		frc::SmartDashboard::PutNumber("GearLift Clamp: ", m_gearLift.IsClamped());
+		frc::SmartDashboard::PutNumber("Winch Trigger : ", round(m_leftTrigger, 2));
 
 		frc::SmartDashboard::PutNumber("Auto State    : ", m_autoState);
 		frc::SmartDashboard::PutNumber("TraverseIndex : ", m_traverseIndex);

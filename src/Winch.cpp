@@ -19,7 +19,21 @@ Winch::~Winch()
 void Winch::Stop()
 {
 	m_winchMotor.Set(0.0);
-	m_winchCurrent = m_pPDP->GetCurrent(PDP_CHANEL_WINCH);
+	m_winchCurrent = m_pPDP->GetCurrent(PDP_CHANNEL_WINCH);
+}
+
+void Winch::Update(double winchTrigger)
+{
+	if (IsStalled())
+	{
+		Stop();
+		return;
+	}
+
+	if (winchTrigger > .2)
+		m_winchMotor.Set(winchTrigger);
+	else
+		Stop();
 }
 
 void Winch::Raise(bool bFastSpeed)
@@ -29,18 +43,18 @@ void Winch::Raise(bool bFastSpeed)
 	else
 		m_winchMotor.Set(CLIMB_SLOW_SPEED);
 
-	m_winchCurrent = m_pPDP->GetCurrent(PDP_CHANEL_WINCH);
+	m_winchCurrent = m_pPDP->GetCurrent(PDP_CHANNEL_WINCH);
 }
 
 void Winch::Lower()
 {
 	m_winchMotor.Set(CLIMB_SLOW_SPEED);
-	m_winchCurrent = m_pPDP->GetCurrent(PDP_CHANEL_WINCH);
+	m_winchCurrent = m_pPDP->GetCurrent(PDP_CHANNEL_WINCH);
 }
 
 bool Winch::IsStalled()
 {
-	m_winchCurrent = m_pPDP->GetCurrent(PDP_CHANEL_WINCH);
+	m_winchCurrent = m_pPDP->GetCurrent(PDP_CHANNEL_WINCH);
 	return (m_winchCurrent > STALL_CURRENT_WINCH);
 
 }

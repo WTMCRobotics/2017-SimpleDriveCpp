@@ -10,6 +10,7 @@
 
 #include <VictorSP.h>
 #include <DoubleSolenoid.h>
+#include <DigitalInput.h>
 
 #include "RobotDefs.h"
 
@@ -22,18 +23,32 @@ class GearLift
 private:
 	frc::VictorSP 		m_liftMotor {1};
 
-	frc::DoubleSolenoid	m_clampSolinoid {PCM_ID, PCM_CHANEL_GEAR_CLAMP, PCM_CHANEL_GEAR_RELEASE};
+	frc::DoubleSolenoid	m_clampSolinoid {PCM_ID, PCM_CHANNEL_GEAR_CLAMP, PCM_CHANNEL_GEAR_RELEASE};
+
+	DigitalInput m_diGearLiftDown  {DIO_SWITCH_GEARLIFT_DOWN};
+	DigitalInput m_diGearLiftUp    {DIO_SWITCH_GEARLIFT_UP};
+	bool m_bGearLiftDown;
+	bool m_bGearLiftUp;
+
+	bool m_bGearLiftClamped;
+	bool m_bGearLiftStalled;
 
 public:
 	GearLift();
 	virtual ~GearLift();
 
 	void Stop(void);
+	void Update(bool bLiftControl, bool bClampControl);
+
 	void Raise(void);
 	void Lower(void);
 	void Clamp(void);
 	void Release(void);
-	bool IsStalled(void);
+
+	bool IsStalled(void)	{ return m_bGearLiftStalled; }
+	bool IsUp(void) 		{ return m_bGearLiftUp; }
+	bool IsDown(void) 		{ return m_bGearLiftDown; }
+	bool IsClamped(void) 	{ return m_bGearLiftClamped; }
 };
 
 #endif /* GEAR_LIFT_H_ */

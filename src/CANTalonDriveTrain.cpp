@@ -25,18 +25,21 @@ CANTalonDriveTrain::CANTalonDriveTrain(frc::XboxController* pController, frc::AD
 	m_rightMasterDrive.SetControlMode(CANSpeedController::kSpeed);
 	m_rightMasterDrive.Set(0.0);
 	m_rightMasterDrive.SetFeedbackDevice(CANTalon::QuadEncoder);
-	m_rightMasterDrive.ConfigEncoderCodesPerRev(2048);
+	m_rightMasterDrive.ConfigEncoderCodesPerRev(DRIVE_ENCDR_STEPS);
+	m_rightMasterDrive.ConfigNominalOutputVoltage(+0.0f, -0.0f);
 	m_rightMasterDrive.ConfigPeakOutputVoltage(+12.0f, -12.0f);
-	m_rightMasterDrive.SetVoltageRampRate(DRIVE_VOLTAGE_RAMP_SEC);
-	m_rightMasterDrive.SetSensorDirection(false);
+	m_rightMasterDrive.SetVoltageRampRate(DRIVE_RAMP_VoltsPerSec);
+	m_rightMasterDrive.SetSensorDirection(true);
+	m_rightMasterDrive.SetPID(DRIVE_PID_P_GAIN, DRIVE_PID_I_GAIN, DRIVE_PID_D_GAIN);
 
 	m_leftMasterDrive.SetControlMode(CANSpeedController::kSpeed);
 	m_leftMasterDrive.Set(0.0);
 	m_leftMasterDrive.SetFeedbackDevice(CANTalon::QuadEncoder);
-	m_leftMasterDrive.ConfigEncoderCodesPerRev(2048);
+	m_leftMasterDrive.ConfigEncoderCodesPerRev(DRIVE_ENCDR_STEPS);
 	m_leftMasterDrive.ConfigPeakOutputVoltage(+12.0f, -12.0f);
-	m_leftMasterDrive.SetVoltageRampRate(DRIVE_VOLTAGE_RAMP_SEC);
-	m_leftMasterDrive.SetSensorDirection(false);
+	m_leftMasterDrive.SetVoltageRampRate(DRIVE_RAMP_VoltsPerSec);
+	m_leftMasterDrive.SetSensorDirection(true);
+	m_leftMasterDrive.SetPID(DRIVE_PID_P_GAIN, DRIVE_PID_I_GAIN, DRIVE_PID_D_GAIN);
 
 #elif defined(MODE_Position)
 	m_rightMasterDrive.SetControlMode(CANSpeedController::kPosition);
@@ -48,11 +51,11 @@ CANTalonDriveTrain::CANTalonDriveTrain(frc::XboxController* pController, frc::AD
 #error No mode selected for TallonSRX
 #endif
 
-//	m_rightSlaveDrive.SetControlMode(CANSpeedController::kFollower);
-//	m_rightSlaveDrive.Set(CAN_ID_RIGHTMASTER);
+	m_rightSlaveDrive.SetControlMode(CANSpeedController::kFollower);
+	m_rightSlaveDrive.Set(CAN_ID_RIGHTMASTER);
 
-//	m_leftSlaveDrive.SetControlMode(CANSpeedController::kFollower);
-//	m_leftSlaveDrive.Set(CAN_ID_LEFTMASTER);
+	m_leftSlaveDrive.SetControlMode(CANSpeedController::kFollower);
+	m_leftSlaveDrive.Set(CAN_ID_LEFTMASTER);
 
 }
 
@@ -69,10 +72,16 @@ void CANTalonDriveTrain::Stop(void)
 	m_rightMasterDrive.Set(m_rightSpeed);
 }
 
-void CANTalonDriveTrain::Update(double leftCommand, double rightCommand)
+void CANTalonDriveTrain::Update(double leftCommand, double rightCommand, bool slowSpeed)
 {
 	m_leftTarget  = Deadband(leftCommand)  * MaxSpeed * m_speedFactor;
 	m_rightTarget = Deadband(rightCommand) * MaxSpeed * m_speedFactor;
+
+	if (slowSpeed)
+	{
+		m_leftTarget  *= .3;
+		m_rightTarget *= .3;
+	}
 
 	m_leftMasterDrive.Set(-m_leftTarget);
 	m_rightMasterDrive.Set(m_rightTarget);

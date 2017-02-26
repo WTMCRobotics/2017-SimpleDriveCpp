@@ -29,7 +29,7 @@
 class CANTalonDriveTrain
 {
 private:
-	const double MaxSpeed = 2000;	// max speed in RPM of wheels
+	const double MaxSpeed = 500;	// max speed in RPM of wheels
 
 	// motor controllers
 	CANTalon m_rightMasterDrive {CAN_ID_RIGHTMASTER};
@@ -60,7 +60,7 @@ public:
 	virtual ~CANTalonDriveTrain();
 
 	void Stop();
-	void Update(double rightCommand, double leftCommand);
+	void Update(double rightCommand, double leftCommand, bool slowSpeed);
 
 	void AutoTurnStart(double currentAngle, double deltaAngle);
 	bool AutoTurnUpdate(double currentAngle);
