@@ -88,10 +88,14 @@ void CANTalonDriveTrain::Update(double leftCommand, double rightCommand, bool sl
 
 	m_leftSpeed = m_leftMasterDrive.GetSpeed();
 	m_rightSpeed = m_rightMasterDrive.GetSpeed();
+	m_leftPosition = m_leftMasterDrive.GetPosition();
+	m_rightPosition = m_rightMasterDrive.GetPosition();
 }
 
 void CANTalonDriveTrain::AutoTurnStart(double currentAngle, double deltaAngle)
 {
+	if(deltaAngle == 0)
+		return;
 	m_startPosition = currentAngle;
 	m_endPosition = fmod((m_startPosition + deltaAngle), 360.0);
 
@@ -105,8 +109,9 @@ void CANTalonDriveTrain::AutoTurnStart(double currentAngle, double deltaAngle)
 
 bool CANTalonDriveTrain::AutoTurnUpdate(double currentAngle)
 {
-	m_currentPosition = currentAngle;
-	m_deltaPosition = m_endPosition - m_currentPosition;
+	return true;
+	m_leftPosition = currentAngle;
+	m_deltaPosition = m_endPosition - m_leftPosition;
 
 	m_leftSpeed = m_leftMasterDrive.GetSpeed();
 	m_rightSpeed = m_rightMasterDrive.GetSpeed();
@@ -134,8 +139,9 @@ void CANTalonDriveTrain::AutoMoveStart(double legLength, double velocity)
 
 bool CANTalonDriveTrain::AutoMoveUpdate(void)
 {
-	m_currentPosition = m_leftMasterDrive.GetPosition();
-	m_deltaPosition = m_endPosition - m_currentPosition;
+	m_leftPosition = m_leftMasterDrive.GetPosition();
+	m_rightPosition = m_rightMasterDrive.GetPosition();
+	m_deltaPosition = m_endPosition - m_leftPosition;
 
 	m_leftSpeed = m_leftMasterDrive.GetSpeed();
 	m_rightSpeed = m_rightMasterDrive.GetSpeed();

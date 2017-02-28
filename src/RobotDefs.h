@@ -53,11 +53,11 @@
 
 // starting location 1 (LEFT lane for Red Alliance, RIGHT for Blue Alliance)
 #define kStart1Angle0	+0.0
-#define kStart1Leg0		  4.75
-#define kStart1Speed0	  250.0
+#define kStart1Leg0		  4.00
+#define kStart1Speed0	  50.0
 #define kStart1Angle1	60.0
-#define kStart1Leg1		  2.8
-#define kStart1Speed1	  250.0
+#define kStart1Leg1		  1.00
+#define kStart1Speed1	  50.0
 
 // starting location 1 (CENTER lane for both Alliances)
 #define kStart2Angle0	+0.0

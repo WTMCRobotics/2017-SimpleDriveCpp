@@ -14,8 +14,8 @@
 
 #include "RobotDefs.h"
 
-#define RAISE_SPEED  0.40
-#define LOWER_SPEED	 0.40
+#define RAISE_SPEED  0.75
+#define LOWER_SPEED	 0.75
 
 
 class GearLift
@@ -38,7 +38,7 @@ public:
 	virtual ~GearLift();
 
 	void Stop(void);
-	void Update(bool bLiftControl, bool bClampControl);
+	void Update(bool bLiftRaise, bool bLiftLower, bool bClampControl);
 
 	void Raise(void);
 	void Lower(void);

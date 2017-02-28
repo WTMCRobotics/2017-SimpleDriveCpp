@@ -47,7 +47,8 @@ private:
 
 	double m_startPosition 	 = 0.0;
 	double m_endPosition	 = 0.0;
-	double m_currentPosition = 0.0;
+	double m_leftPosition = 0.0;
+	double m_rightPosition = 0.0;
 	double m_deltaPosition 	 = 0.0;
 
 	// pointers to global objects
@@ -79,7 +80,8 @@ public:
 
 	double GetStartPosition(void) { return m_startPosition;}
 	double GetEndPosition(void)  { return m_endPosition;}
-	double GetCurrentPosition(void) { return m_currentPosition;}
+	double GetLeftPosition(void) { return m_leftPosition;}
+	double GetRightPosition(void) { return m_rightPosition;}
 	double GetDeltaPosition(void)  { return m_deltaPosition;}
 
 private:

@@ -263,12 +263,13 @@ public:
 
 	void InitTraverse(void)
 	{
-		m_angle[0] 		= kStart1Angle0;
-		m_distance[0] 	= kStart1Leg0;
-		m_speed[0]		= kStart1Speed0;
-		m_angle[1] 		= kStart1Angle1;
-		m_distance[1] 	= kStart1Leg1;
-		m_speed[1]		= kStart1Speed1;
+		m_angle[0] 		= 0.0;
+		m_distance[0] 	= 2.00;
+		m_speed[0]		= 150.00;
+		m_angle[1] 		= 60.0;
+		m_distance[1] 	= 1.00;
+		m_speed[1]		= 150.00;
+		m_speed[2] 		= 0;
 		m_traverseState = traverseNext;
 		m_traverseIndex = 0;
 	}
@@ -283,7 +284,7 @@ public:
 		m_rightTrigger = m_controller.GetTriggerAxis(frc::GenericHID::kRightHand);
 
 		m_bLeftBumper = m_controller.GetBumper(frc::GenericHID::kLeftHand);
-		m_bRightBumper = m_controller.GetBumper(frc::GenericHID::kLeftHand);
+		m_bRightBumper = m_controller.GetBumper(frc::GenericHID::kRightHand);
 
 		m_bButtonA = m_controller.GetAButton();
 		m_bButtonB = m_controller.GetBButton();
@@ -293,32 +294,29 @@ public:
 
 	void TeleopPeriodic()
 	{
-		UpdateControlData();
 
-/*
 		if (m_controller.GetAButton() )
 		{
+			UpdateControlData();
 			if (m_autoState == autoTraverse)
 			{
 				if (AutoTraverse())
 					m_autoState = autoDone;
 			}
+			UpdateDashboard();
+			return;
 		}
 		else
 		{
 			m_autoState = autoTraverse;
 			InitTraverse();
-			m_driveTrain.Stop();
+//			m_driveTrain.Stop();
 		}
 
-		UpdateDashboard();
-
-		return;
-*/
-
+		UpdateControlData();
 
 		m_driveTrain.Update(m_leftJoystickY, m_rightJoystickY, m_bLeftBumper);
-		m_gearLift.Update(m_bButtonA, m_bButtonB);
+		m_gearLift.Update(m_bButtonX, m_bButtonY, m_bRightBumper);
 		m_winchMotor.Update(m_leftTrigger);
 
 		UpdateDashboard();
@@ -363,7 +361,8 @@ public:
 
 		frc::SmartDashboard::PutNumber("Start Position   : ", round(m_driveTrain.GetStartPosition(), 2));
 		frc::SmartDashboard::PutNumber("End Position     : ", round(m_driveTrain.GetEndPosition(), 2));
-		frc::SmartDashboard::PutNumber("Current Position : ", round(m_driveTrain.GetCurrentPosition(), 2));
+		frc::SmartDashboard::PutNumber("Left Position : ", round(m_driveTrain.GetLeftPosition(), 2));
+		frc::SmartDashboard::PutNumber("Right Position : ", round(m_driveTrain.GetRightPosition(), 2));
 		frc::SmartDashboard::PutNumber("Delta Position   : ", round(m_driveTrain.GetDeltaPosition(), 2));
 
 	}
