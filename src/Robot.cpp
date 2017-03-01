@@ -88,6 +88,11 @@ private:
 	eTraverseState m_traverseState = traverseDone;
 	int m_traverseIndex = 0;
 
+	double m_angle[AUTO_MOVE_MAX_SEGMENTS];
+	double m_leftSpeed[AUTO_MOVE_MAX_SEGMENTS];
+	double m_rightSpeed[AUTO_MOVE_MAX_SEGMENTS];
+	double m_distance[AUTO_MOVE_MAX_SEGMENTS];
+
 
 
 public:
@@ -132,7 +137,8 @@ public:
 		for (int i=0; i<AUTO_MOVE_MAX_SEGMENTS; i++)
 		{
 			m_distance[i] = 0.0;
-			m_speed[i] = 0.0;
+			m_leftSpeed[i] = 0.0;
+			m_rightSpeed[i] = 0.0;
 			m_angle[i] = 0.0;
 		}
 
@@ -141,31 +147,34 @@ public:
 		switch (m_allianceLocation)
 		{
 		case 1:
-			m_angle[0] 		= kStart1Angle0;
-			m_distance[0] 	= kStart1Leg0;
-			m_speed[0]		= kStart1Speed0;
-			m_angle[1] 		= kStart1Angle1;
-			m_distance[1] 	= kStart1Leg1;
-			m_speed[1]		= kStart1Speed1;
+			m_angle[0] 		= kStart1Angle_0;
+			m_distance[0] 	= kStart1Dist_0;
+			m_leftSpeed[0]	= kStart1SpeedLf_0;
+			m_rightSpeed[0]	= kStart1SpeedRt_0;
+			m_angle[1] 		= kStart1Angle_1;
+			m_distance[1] 	= kStart1Dist_1;
+			m_leftSpeed[1]	= kStart1SpeedLf_1;
+			m_rightSpeed[1]	= kStart1SpeedRt_1;
 			break;
 		case 2:
-			m_angle[0] 		= kStart2Angle0;
-			m_distance[0] 	= kStart2Leg0;
-			m_speed[0]		= kStart2Speed0;
-			m_angle[1] 		= kStart2Angle1;
-			m_distance[1] 	= kStart2Leg1;
-			m_speed[1]		= kStart2Speed1;
-			m_angle[2] 		= kStart2Angle2;
-			m_distance[2] 	= kStart2Leg2;
-			m_speed[2]		= kStart2Speed2;
+			m_angle[0] 		= kStart2Angle_0;
+			m_distance[0] 	= kStart2Dist_0;
+			m_leftSpeed[0]	= kStart2SpeedLf_0;
+			m_rightSpeed[0]	= kStart2SpeedRt_0;
+			m_angle[1] 		= kStart2Angle_1;
+			m_distance[1] 	= kStart2Dist_1;
+			m_leftSpeed[1]	= kStart2SpeedLf_1;
+			m_rightSpeed[1]	= kStart2SpeedRt_1;
 			break;
 		case 3:
-			m_angle[0] 		= kStart3Angle0;
-			m_distance[0] 	= kStart3Leg0;
-			m_speed[0]		= kStart3Speed0;
-			m_angle[1] 		= kStart3Angle1;
-			m_distance[1] 	= kStart3Leg1;
-			m_speed[2]		= kStart3Speed1;
+			m_angle[0] 		= kStart3Angle_0;
+			m_distance[0] 	= kStart3Dist_0;
+			m_leftSpeed[0]	= kStart3SpeedLf_0;
+			m_rightSpeed[0]	= kStart3SpeedRt_0;
+			m_angle[1] 		= kStart3Angle_1;
+			m_distance[1] 	= kStart3Dist_1;
+			m_leftSpeed[1]	= kStart3SpeedLf_1;
+			m_rightSpeed[1]	= kStart3SpeedRt_1;
 			break;
 		default:
 			break;
@@ -211,16 +220,12 @@ public:
 
 
 
-	double m_distance[AUTO_MOVE_MAX_SEGMENTS];
-	double m_angle[AUTO_MOVE_MAX_SEGMENTS];
-	double m_speed[AUTO_MOVE_MAX_SEGMENTS];
-
 	bool AutoTraverse(void)
 	{
 		if (m_traverseState == traverseNext)
 		{
 			if (m_traverseIndex >= AUTO_MOVE_MAX_SEGMENTS ||
-				m_speed[m_traverseIndex] == 0)
+				m_leftSpeed[m_traverseIndex] == 0)
 			{
 				m_traverseState = traverseDone;
 				return true;
@@ -237,7 +242,7 @@ public:
 			if (m_driveTrain.AutoTurnUpdate(m_gyroAngle))
 			{
 				m_traverseState = traverseMove;
-				m_driveTrain.AutoMoveStart(m_distance[m_traverseIndex], m_speed[m_traverseIndex]);
+				m_driveTrain.AutoMoveStart(m_distance[m_traverseIndex], m_leftSpeed[m_traverseIndex], m_rightSpeed[m_traverseIndex]);
 			}
 		}
 
@@ -263,15 +268,29 @@ public:
 
 	void InitTraverse(void)
 	{
-		m_angle[0] 		= 0.0;
-		m_distance[0] 	= 2.00;
-		m_speed[0]		= 150.00;
-		m_angle[1] 		= 60.0;
-		m_distance[1] 	= 1.00;
-		m_speed[1]		= 150.00;
-		m_speed[2] 		= 0;
 		m_traverseState = traverseNext;
 		m_traverseIndex = 0;
+
+		for (int i=0; i<AUTO_MOVE_MAX_SEGMENTS; i++)
+		{
+			m_distance[i] = 0.0;
+			m_leftSpeed[i] = 0.0;
+			m_rightSpeed[i] = 0.0;
+			m_angle[i] = 0.0;
+		}
+
+		m_angle[0] 		= 0.0;
+		m_distance[0] 	  = 2.00;
+		m_leftSpeed[0]	  = 40.00;
+		m_rightSpeed[0]	  = 40.00;
+
+		return;
+
+		m_angle[1] 		= 60.0;
+		m_distance[1] 	  = 1.00;
+		m_leftSpeed[1]	  = 40.00;
+		m_rightSpeed[1]	  = 40.00;
+
 	}
 
 	void UpdateControlData()
@@ -292,12 +311,20 @@ public:
 		m_bButtonY = m_controller.GetYButton();
 	}
 
+	double m_leftPosOffset = 0.0;
+	double m_rightPosOffset = 0.0;
+
 	void TeleopPeriodic()
 	{
+		UpdateControlData();
 
-		if (m_controller.GetAButton() )
+		if (m_bButtonB)
 		{
-			UpdateControlData();
+			m_leftPosOffset = m_driveTrain.GetLeftEncoderPos();
+			m_rightPosOffset = m_driveTrain.GetRightEncoderPos();
+		}
+		else if (m_bButtonA)
+		{
 			if (m_autoState == autoTraverse)
 			{
 				if (AutoTraverse())
@@ -340,31 +367,38 @@ public:
 
 		frc::SmartDashboard::PutString("Robot : ", (g_bPracticeRobot) ? "Practice Robot" : "Competition Robot");
 
-		frc::SmartDashboard::PutNumber("Left Joystick : ", round(m_leftJoystickY, 2));
-		frc::SmartDashboard::PutNumber("Left Command  : ", round(m_driveTrain.GetLeftTarget(), 2));
-		frc::SmartDashboard::PutNumber("Left Speed    : ", round(m_driveTrain.GetLeftSpeed(), 2));
+		frc::SmartDashboard::PutNumber("Left Joystick  : ", round(m_leftJoystickY, 2));
+		frc::SmartDashboard::PutNumber("Left Command   : ", round(m_driveTrain.GetLeftTarget(), 2));
+		frc::SmartDashboard::PutNumber("Left Speed     : ", round(m_driveTrain.GetLeftSpeed(), 2));
+		frc::SmartDashboard::PutNumber("Left Position  : ", round(m_driveTrain.GetLeftPosition(), 2));
+		frc::SmartDashboard::PutNumber("Left Enc. Pos. : ", round(m_driveTrain.GetLeftEncoderPos()-m_leftPosOffset, 2));
+		frc::SmartDashboard::PutNumber("Left Enc. Vel. : ", round(m_driveTrain.GetLeftEncoderVel(), 2));
 
-		frc::SmartDashboard::PutNumber("Right Joystick: ", round(m_rightJoystickY, 2));
-		frc::SmartDashboard::PutNumber("Right Command : ", round(m_driveTrain.GetRightTarget(), 2));
-		frc::SmartDashboard::PutNumber("Right Speed   : ", round(m_driveTrain.GetRightSpeed(), 2));
-
-		frc::SmartDashboard::PutNumber("GearLift Up   : ", m_gearLift.IsUp());
-		frc::SmartDashboard::PutNumber("GearLift Down : ", m_gearLift.IsDown());
-		frc::SmartDashboard::PutNumber("GearLift Clamp: ", m_gearLift.IsClamped());
-		frc::SmartDashboard::PutNumber("Winch Trigger : ", round(m_leftTrigger, 2));
-
-		frc::SmartDashboard::PutNumber("Auto State    : ", m_autoState);
-		frc::SmartDashboard::PutNumber("TraverseIndex : ", m_traverseIndex);
-		frc::SmartDashboard::PutNumber("TraverseState : ", m_traverseState);
-
-		frc::SmartDashboard::PutNumber("Gyro Angle: ", round(m_gyroAngle, 2));
-
-		frc::SmartDashboard::PutNumber("Start Position   : ", round(m_driveTrain.GetStartPosition(), 2));
-		frc::SmartDashboard::PutNumber("End Position     : ", round(m_driveTrain.GetEndPosition(), 2));
-		frc::SmartDashboard::PutNumber("Left Position : ", round(m_driveTrain.GetLeftPosition(), 2));
+		frc::SmartDashboard::PutNumber("Right Joystick : ", round(m_rightJoystickY, 2));
+		frc::SmartDashboard::PutNumber("Right Command  : ", round(m_driveTrain.GetRightTarget(), 2));
+		frc::SmartDashboard::PutNumber("Right Speed    : ", round(m_driveTrain.GetRightSpeed(), 2));
 		frc::SmartDashboard::PutNumber("Right Position : ", round(m_driveTrain.GetRightPosition(), 2));
-		frc::SmartDashboard::PutNumber("Delta Position   : ", round(m_driveTrain.GetDeltaPosition(), 2));
+		frc::SmartDashboard::PutNumber("Right Enc. Pos.: ", round(m_driveTrain.GetRightEncoderPos()-m_rightPosOffset, 2));
+		frc::SmartDashboard::PutNumber("Right Enc. Vel.: ", round(m_driveTrain.GetRightEncoderVel(), 2));
 
+		frc::SmartDashboard::PutNumber("GearLift Up    : ", m_gearLift.IsUp());
+		frc::SmartDashboard::PutNumber("GearLift Down  : ", m_gearLift.IsDown());
+		frc::SmartDashboard::PutNumber("GearLift Clamp : ", m_gearLift.IsClamped());
+		frc::SmartDashboard::PutNumber("Winch Trigger  : ", round(m_leftTrigger, 2));
+
+		frc::SmartDashboard::PutNumber("Auto State     : ", m_autoState);
+		frc::SmartDashboard::PutNumber("TraverseIndex  : ", m_traverseIndex);
+		frc::SmartDashboard::PutNumber("TraverseState  : ", m_traverseState);
+
+
+		frc::SmartDashboard::PutNumber("Start Position : ", round(m_driveTrain.GetStartPosition(), 2));
+		frc::SmartDashboard::PutNumber("End Position   : ", round(m_driveTrain.GetEndPosition(), 2));
+		frc::SmartDashboard::PutNumber("Delta Position : ", round(m_driveTrain.GetDeltaPosition(), 2));
+
+		frc::SmartDashboard::PutNumber("Gyro Angle     : ", round(m_gyroAngle, 2));
+		frc::SmartDashboard::PutNumber("Start Angle    : ", round(m_driveTrain.GetStartPosition(), 2));
+		frc::SmartDashboard::PutNumber("End Angle      : ", round(m_driveTrain.GetEndPosition(), 2));
+		frc::SmartDashboard::PutNumber("Delta Angle    : ", round(m_driveTrain.GetDeltaPosition(), 2));
 	}
 
 	double round(double value, int numDecimals)

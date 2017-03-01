@@ -52,31 +52,38 @@
 #define AUTO_MOVE_MAX_SEGMENTS	3
 
 // starting location 1 (LEFT lane for Red Alliance, RIGHT for Blue Alliance)
-#define kStart1Angle0	+0.0
-#define kStart1Leg0		  4.00
-#define kStart1Speed0	  50.0
-#define kStart1Angle1	60.0
-#define kStart1Leg1		  1.00
-#define kStart1Speed1	  50.0
+#define kStart1Angle_0		+0.0
+#define kStart1Dist_0		  4.00
+#define kStart1SpeedLf_0	  50.0
+#define kStart1SpeedRt_0	  50.0
+#define kStart1Angle_1		60.0
+#define kStart1Dist_1		  1.00
+#define kStart1SpeedLf_1	  50.0
+#define kStart1SpeedRt_1	  50.0
 
 // starting location 1 (CENTER lane for both Alliances)
-#define kStart2Angle0	+0.0
-#define kStart2Leg0		  0.5
-#define kStart2Speed0	  250.0
-#define kStart2Angle1	+45.0
-#define kStart2Leg1		  0.5
-#define kStart2Speed1	  250.0
-#define kStart2Angle2	-45.0
-#define kStart2Leg2		  3.0
-#define kStart2Speed2	  250.0
+#define kStart2Angle_0		+0.0
+#define kStart2Dist_0		  0.5
+#define kStart2SpeedLf_0	  250.0
+#define kStart2SpeedRt_0	  250.0
+#define kStart2Angle_1		+45.0
+#define kStart2Dist_1		  0.5
+#define kStart2SpeedLf_1	  250.0
+#define kStart2SpeedRt_1	  250.0
+#define kStart2Angle_2		-45.0
+#define kStart2Dist_2		  3.0
+#define kStart2SpeedLf_2	  250.0
+#define kStart2SpeedRt_2	  250.0
 
 // starting location 3 (RIGHT lane for Red Alliance, LEFT for Blue Alliance)
-#define kStart3Angle0	+0.0
-#define kStart3Leg0		  4.75
-#define kStart3Speed0	  200.0
-#define kStart3Angle1	-60.0
-#define kStart3Leg1		  2.8
-#define kStart3Speed1	  200.0
+#define kStart3Angle_0		+0.0
+#define kStart3Dist_0		  4.75
+#define kStart3SpeedLf_0	  200.0
+#define kStart3SpeedRt_0	  200.0
+#define kStart3Angle_1		-60.0
+#define kStart3Dist_1		  2.8
+#define kStart3SpeedLf_1	  200.0
+#define kStart3SpeedRt_1	  200.0
 
 
 #endif	/* ROBOT_DEFS_H_ */

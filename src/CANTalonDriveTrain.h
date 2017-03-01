@@ -29,7 +29,7 @@
 class CANTalonDriveTrain
 {
 private:
-	const double MaxSpeed = 500;	// max speed in RPM of wheels
+	const double MaxSpeed = 122;	// max speed in RPM of wheels
 
 	// motor controllers
 	CANTalon m_rightMasterDrive {CAN_ID_RIGHTMASTER};
@@ -40,16 +40,24 @@ private:
 	double m_leftTarget  = 0.0;
 	double m_rightTarget = 0.0;
 
-	double m_leftSpeed	  = 0.0;
-	double m_rightSpeed   = 0.0;
+	double m_leftSpeed	  	 = 0.0;
+	double m_rightSpeed   	 = 0.0;
+	double m_leftPosition 	 = 0.0;
+	double m_rightPosition 	 = 0.0;
+	double m_leftEncoderPos  = 0.0;
+	double m_rightEncoderPos = 0.0;
+	double m_leftEncoderVel  = 0.0;
+	double m_rightEncoderVel = 0.0;
 
 	double m_speedFactor = .25;
 
-	double m_startPosition 	 = 0.0;
-	double m_endPosition	 = 0.0;
-	double m_leftPosition = 0.0;
-	double m_rightPosition = 0.0;
-	double m_deltaPosition 	 = 0.0;
+	double m_startAngle		= 0.0;
+	double m_endAngle		= 0.0;
+	double m_deltaAngle		= 0.0;
+
+	double m_startPosition 	= 0.0;
+	double m_endPosition	= 0.0;
+	double m_deltaPosition 	= 0.0;
 
 	// pointers to global objects
 	frc::XboxController* m_pController;
@@ -65,26 +73,35 @@ public:
 
 	void AutoTurnStart(double currentAngle, double deltaAngle);
 	bool AutoTurnUpdate(double currentAngle);
-	void AutoMoveStart(double legLength, double velocity);
+	void AutoMoveStart(double legLength, double leftSpeed, double rightSpeed);
 	bool AutoMoveUpdate(void);
 
 
 	void SetSpeedFactor(double speedFactor) { m_speedFactor = fmax(0.0, fmin(m_speedFactor, 1.0)); }
 	double GetSpeedFactor(void) { return m_speedFactor; }
 
-	double GetLeftTarget(void)	{ return m_leftTarget;}
-	double GetLeftSpeed(void)   { return m_leftSpeed;}
+	double GetLeftSpeed(void)   	{ return m_leftSpeed;}
+	double GetRightSpeed(void)  	{ return m_rightSpeed;}
+	double GetLeftPosition(void) 	{ return m_leftPosition;}
+	double GetRightPosition(void) 	{ return m_rightPosition;}
+	double GetLeftEncoderPos(void) 	{ return m_leftEncoderPos;}
+	double GetRightEncoderPos(void) { return m_rightEncoderPos;}
+	double GetLeftEncoderVel(void) 	{ return m_leftEncoderVel;}
+	double GetRightEncoderVel(void) { return m_rightEncoderVel;}
 
-	double GetRightTarget(void) { return m_rightTarget;}
-	double GetRightSpeed(void)  { return m_rightSpeed;}
+	double GetLeftTarget(void)		{ return m_leftTarget;}
+	double GetRightTarget(void) 	{ return m_rightTarget;}
 
-	double GetStartPosition(void) { return m_startPosition;}
-	double GetEndPosition(void)  { return m_endPosition;}
-	double GetLeftPosition(void) { return m_leftPosition;}
-	double GetRightPosition(void) { return m_rightPosition;}
-	double GetDeltaPosition(void)  { return m_deltaPosition;}
+	double GetStartPosition(void) 	{ return m_startPosition;}
+	double GetEndPosition(void)  	{ return m_endPosition;}
+	double GetDeltaPosition(void)  	{ return m_deltaPosition;}
+
+	double GetStartAngle(void) 	{ return m_startAngle;}
+	double GetEndAngle(void)  	{ return m_endAngle;}
+	double GetDeltaAngle(void)  	{ return m_deltaAngle;}
 
 private:
+	void UpdateStats(void);
 	double Deadband(double commandValue);
 
 };
