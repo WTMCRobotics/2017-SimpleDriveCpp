@@ -94,8 +94,8 @@ void CANTalonDriveTrain::Update(double leftCommand, double rightCommand, bool sl
 
 	if (slowSpeed)
 	{
-		m_leftTarget  *= .3;
-		m_rightTarget *= .3;
+		m_leftTarget  *= kSlowSpeedFactor;
+		m_rightTarget *= kSlowSpeedFactor;
 	}
 
 	m_leftMasterDrive.Set(-m_leftTarget);

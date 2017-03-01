@@ -25,12 +25,14 @@
 // ToDo: test deadband value
 #define DRIVE_COMMAND_DEADBAND		0.1
 #define DRIVE_COMMAND_DEADBAND		0.1
-#define DRIVE_RAMP_VoltsPerSec		12.0
+#define DRIVE_RAMP_VoltsPerSec		24.0
 #define DRIVE_PID_P_GAIN			0.1
 #define DRIVE_PID_I_GAIN			0.0
 #define DRIVE_PID_D_GAIN			0.005
 #define DRIVE_ENCDR_STEPS			2048
 #define DRIVE_GEAR_RATIO			12.75
+
+#define kSlowSpeedFactor			.2
 
 #define GEARLIFT_COMMAND_DEADBAND	0.2
 
