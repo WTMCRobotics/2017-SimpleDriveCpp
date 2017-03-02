@@ -66,25 +66,27 @@ private:
 	//
 	typedef enum
 	{
-		autoStart,
-		autoTraverse,
-		autoDropGear,
-		autoDone
+		autoStart	 = 0,
+		autoTraverse = 1,
+		autoDropGear = 2,
+		autoDone	 = 3
 	} eAutonomousState;
+	std::string m_strAutoState[4] = {"autoStart", "autoTraverse", "autoDropGear", "autoDone"};
 
 
 	// traverse states
 	//
 	typedef enum
 	{
-		traverseNext,
-		traverseTurn,
-		traverseMove,
-		traverseDone
+		traverseNext = 0,
+		traverseTurn = 1,
+		traverseMove = 2,
+		traverseDone  = 3
 	} eTraverseState;
+	std::string m_strTraverseState[4] = {"traverseNext", "traverseTurn", "traverseMove", "traverseDone"};
 
 
-	eAutonomousState m_autoState = autoStart;
+	eAutonomousState m_autoState = autoDone;
 	eTraverseState m_traverseState = traverseDone;
 	int m_traverseIndex = 0;
 
@@ -93,7 +95,7 @@ private:
 	double m_rightSpeed[AUTO_MOVE_MAX_SEGMENTS];
 	double m_distance[AUTO_MOVE_MAX_SEGMENTS];
 
-
+	double m_wheelCircumfrence = 0.00;
 
 public:
 
@@ -106,6 +108,11 @@ public:
 
 		// Jumper is installed on Practice Robot, which pulls DI low
 		g_bPracticeRobot = !m_diPracticeRobot.Get();
+
+		if (g_bPracticeRobot)
+			m_wheelCircumfrence = PRACTICE_ROBOT_WHEEL_CIRCUMFRENCE;
+		else
+			m_wheelCircumfrence = COMPETITION_ROBOT_WHEEL_CIRCUMFRENCE;
 
 		frc::CameraServer::GetInstance()->StartAutomaticCapture("Driving Camera", 0);
 
@@ -148,31 +155,40 @@ public:
 		{
 		case 1:
 			m_angle[0] 		= kStart1Angle_0;
-			m_distance[0] 	= kStart1Dist_0;
+			m_distance[0] 	= kStart1Dist_0 / m_wheelCircumfrence;
 			m_leftSpeed[0]	= kStart1SpeedLf_0;
 			m_rightSpeed[0]	= kStart1SpeedRt_0;
+			m_rightSpeed[0]	= kStart1SpeedRt_0;
+
 			m_angle[1] 		= kStart1Angle_1;
-			m_distance[1] 	= kStart1Dist_1;
+			m_distance[1] 	= kStart1Dist_1 / m_wheelCircumfrence;
 			m_leftSpeed[1]	= kStart1SpeedLf_1;
 			m_rightSpeed[1]	= kStart1SpeedRt_1;
 			break;
 		case 2:
 			m_angle[0] 		= kStart2Angle_0;
-			m_distance[0] 	= kStart2Dist_0;
+			m_distance[0] 	= kStart2Dist_0 / m_wheelCircumfrence;
 			m_leftSpeed[0]	= kStart2SpeedLf_0;
 			m_rightSpeed[0]	= kStart2SpeedRt_0;
+
 			m_angle[1] 		= kStart2Angle_1;
-			m_distance[1] 	= kStart2Dist_1;
+			m_distance[1] 	= kStart2Dist_1 / m_wheelCircumfrence;
 			m_leftSpeed[1]	= kStart2SpeedLf_1;
 			m_rightSpeed[1]	= kStart2SpeedRt_1;
+
+			m_angle[2] 		= kStart2Angle_2;
+			m_distance[2] 	= kStart2Dist_2 / m_wheelCircumfrence;
+			m_leftSpeed[2]	= kStart2SpeedLf_2;
+			m_rightSpeed[2]	= kStart2SpeedRt_2;
 			break;
 		case 3:
 			m_angle[0] 		= kStart3Angle_0;
-			m_distance[0] 	= kStart3Dist_0;
+			m_distance[0] 	= kStart3Dist_0 / m_wheelCircumfrence;
 			m_leftSpeed[0]	= kStart3SpeedLf_0;
 			m_rightSpeed[0]	= kStart3SpeedRt_0;
+
 			m_angle[1] 		= kStart3Angle_1;
-			m_distance[1] 	= kStart3Dist_1;
+			m_distance[1] 	= kStart3Dist_1 / m_wheelCircumfrence;
 			m_leftSpeed[1]	= kStart3SpeedLf_1;
 			m_rightSpeed[1]	= kStart3SpeedRt_1;
 			break;
@@ -219,7 +235,6 @@ public:
 	}
 
 
-
 	bool AutoTraverse(void)
 	{
 		if (m_traverseState == traverseNext)
@@ -233,7 +248,7 @@ public:
 			else
 			{
 				m_traverseState = traverseTurn;
-				m_driveTrain.AutoTurnStart(m_angle[m_traverseIndex], m_gyroAngle);
+				m_driveTrain.AutoTurnStart(m_gyroAngle, m_angle[m_traverseIndex], kTurnSpeed);
 			}
 		}
 
@@ -280,16 +295,16 @@ public:
 		}
 
 		m_angle[0] 		= 0.0;
-		m_distance[0] 	  = 2.00;
-		m_leftSpeed[0]	  = 40.00;
-		m_rightSpeed[0]	  = 40.00;
+		m_distance[0] 	  = 19.125 / m_wheelCircumfrence;
+		m_leftSpeed[0]	  = 0.15;
+		m_rightSpeed[0]	  = 0.15;
 
 		return;
 
-		m_angle[1] 		= 60.0;
-		m_distance[1] 	  = 1.00;
-		m_leftSpeed[1]	  = 40.00;
-		m_rightSpeed[1]	  = 40.00;
+		m_angle[1] 		= 15.0;
+		m_distance[1] 	  = 19.125 / m_wheelCircumfrence;
+		m_leftSpeed[1]	  = 0.15;
+		m_rightSpeed[1]	  = 0.15;
 
 	}
 
@@ -320,30 +335,41 @@ public:
 
 		if (m_bButtonB)
 		{
+			// ToDo: Check of SetPosition(0) will accomplish the same thing
 			m_leftPosOffset = m_driveTrain.GetLeftEncoderPos();
 			m_rightPosOffset = m_driveTrain.GetRightEncoderPos();
 		}
 		else if (m_bButtonA)
 		{
-			if (m_autoState == autoTraverse)
-			{
-				if (AutoTraverse())
-					m_autoState = autoDone;
-			}
-			UpdateDashboard();
+			if (m_autoState != autoDone)
+				AutonomousPeriodic();
+
+//			if (m_autoState == autoStart)
+//			{
+//				m_autoState = autoTraverse;
+//			}
+//			else if (m_autoState == autoTraverse)
+//			{
+//				if (AutoTraverse())
+//					m_autoState = autoDone;
+//			}
+//			UpdateDashboard();
 			return;
 		}
 		else
 		{
-			m_autoState = autoTraverse;
-			InitTraverse();
-//			m_driveTrain.Stop();
+			if (m_autoState != autoStart)
+			{
+				m_driveTrain.Stop();
+				InitTraverse();
+				m_autoState = autoStart;
+			}
 		}
 
-		UpdateControlData();
+//		UpdateControlData();
 
 		m_driveTrain.Update(m_leftJoystickY, m_rightJoystickY, m_bLeftBumper);
-		m_gearLift.Update(m_bButtonX, m_bButtonY, m_bRightBumper);
+		m_gearLift.Update(m_bButtonX, m_bButtonY, m_bRightBumper, (m_rightTrigger > .7));
 		m_winchMotor.Update(m_leftTrigger);
 
 		UpdateDashboard();
@@ -358,6 +384,7 @@ public:
 
 	void UpdateDashboard(void)
 	{
+		m_driveTrain.UpdateStats();
 /*
 		double centerX = 0;
 		axisCameraTable->GetNumber("x", centerX);
@@ -366,6 +393,8 @@ public:
  */
 
 		frc::SmartDashboard::PutString("Robot : ", (g_bPracticeRobot) ? "Practice Robot" : "Competition Robot");
+		frc::SmartDashboard::PutString("AutoState     : ", m_strAutoState[m_autoState]);
+		frc::SmartDashboard::PutString("TraverseState : ", m_strTraverseState[m_traverseState]);
 
 		frc::SmartDashboard::PutNumber("Left Joystick  : ", round(m_leftJoystickY, 2));
 		frc::SmartDashboard::PutNumber("Left Command   : ", round(m_driveTrain.GetLeftTarget(), 2));

@@ -29,8 +29,6 @@
 class CANTalonDriveTrain
 {
 private:
-	const double MaxSpeed = 122;	// max speed in RPM of wheels
-
 	// motor controllers
 	CANTalon m_rightMasterDrive {CAN_ID_RIGHTMASTER};
 	CANTalon m_rightSlaveDrive  {CAN_ID_RIGHTSLAVE};
@@ -69,9 +67,10 @@ public:
 	virtual ~CANTalonDriveTrain();
 
 	void Stop();
+	void UpdateStats(void);
 	void Update(double rightCommand, double leftCommand, bool slowSpeed);
 
-	void AutoTurnStart(double currentAngle, double deltaAngle);
+	void AutoTurnStart(double currentAngle, double deltaAngle, double turnSpeed);
 	bool AutoTurnUpdate(double currentAngle);
 	void AutoMoveStart(double legLength, double leftSpeed, double rightSpeed);
 	bool AutoMoveUpdate(void);
@@ -101,7 +100,6 @@ public:
 	double GetDeltaAngle(void)  	{ return m_deltaAngle;}
 
 private:
-	void UpdateStats(void);
 	double Deadband(double commandValue);
 
 };

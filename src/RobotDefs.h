@@ -1,6 +1,12 @@
 #ifndef ROBOT_DEFS_H_
 #define ROBOT_DEFS_H_
 
+// Wheel Circumference
+#define PRACTICE_ROBOT_WHEEL_CIRCUMFRENCE		19.125
+#define COMPETITION_ROBOT_WHEEL_CIRCUMFRENCE	0.0000000000000000000000000000000000
+
+
+
 // Power Distribution Panel
 //
 #define PDP_CHANNEL_RIGHTMASTER	0
@@ -22,9 +28,9 @@
 #define STALL_CURRENT_WINCH 		4.0
 #define STALL_CURRENT_GEAR_LIFT		4.0
 
-// ToDo: test deadband value
-#define DRIVE_COMMAND_DEADBAND		0.1
-#define DRIVE_COMMAND_DEADBAND		0.1
+#define DRIVE_MAX_SPEED				120.0
+#define DRIVE_COMMAND_DEADBAND		0.15
+#define DRIVE_COMMAND_DEADBAND		0.15
 #define DRIVE_RAMP_VoltsPerSec		24.0
 #define DRIVE_PID_P_GAIN			0.1
 #define DRIVE_PID_I_GAIN			0.0
@@ -52,40 +58,40 @@
 // Autonomous mode constants
 //
 #define AUTO_MOVE_MAX_SEGMENTS	3
-
+#define kTurnSpeed			0.15
 // starting location 1 (LEFT lane for Red Alliance, RIGHT for Blue Alliance)
 #define kStart1Angle_0		+0.0
 #define kStart1Dist_0		  4.00
-#define kStart1SpeedLf_0	  50.0
-#define kStart1SpeedRt_0	  50.0
+#define kStart1SpeedLf_0	  0.15
+#define kStart1SpeedRt_0	  0.15
 #define kStart1Angle_1		60.0
 #define kStart1Dist_1		  1.00
-#define kStart1SpeedLf_1	  50.0
-#define kStart1SpeedRt_1	  50.0
+#define kStart1SpeedLf_1	  0.15
+#define kStart1SpeedRt_1	  0.15
 
 // starting location 1 (CENTER lane for both Alliances)
 #define kStart2Angle_0		+0.0
 #define kStart2Dist_0		  0.5
-#define kStart2SpeedLf_0	  250.0
-#define kStart2SpeedRt_0	  250.0
+#define kStart2SpeedLf_0	  0.15
+#define kStart2SpeedRt_0	  0.15
 #define kStart2Angle_1		+45.0
 #define kStart2Dist_1		  0.5
-#define kStart2SpeedLf_1	  250.0
-#define kStart2SpeedRt_1	  250.0
+#define kStart2SpeedLf_1	  0.15
+#define kStart2SpeedRt_1	  0.15
 #define kStart2Angle_2		-45.0
 #define kStart2Dist_2		  3.0
-#define kStart2SpeedLf_2	  250.0
-#define kStart2SpeedRt_2	  250.0
+#define kStart2SpeedLf_2	  0.15
+#define kStart2SpeedRt_2	  0.15
 
 // starting location 3 (RIGHT lane for Red Alliance, LEFT for Blue Alliance)
 #define kStart3Angle_0		+0.0
 #define kStart3Dist_0		  4.75
-#define kStart3SpeedLf_0	  200.0
-#define kStart3SpeedRt_0	  200.0
+#define kStart3SpeedLf_0	  0.15
+#define kStart3SpeedRt_0	  0.15
 #define kStart3Angle_1		-60.0
 #define kStart3Dist_1		  2.8
-#define kStart3SpeedLf_1	  200.0
-#define kStart3SpeedRt_1	  200.0
+#define kStart3SpeedLf_1	  0.15
+#define kStart3SpeedRt_1	  0.15
 
 
 #endif	/* ROBOT_DEFS_H_ */

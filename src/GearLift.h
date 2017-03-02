@@ -38,7 +38,7 @@ public:
 	virtual ~GearLift();
 
 	void Stop(void);
-	void Update(bool bLiftRaise, bool bLiftLower, bool bClampControl);
+	void Update(bool bLiftRaise, bool bLiftLower, bool bClampControl, bool bOverrideLimits);
 
 	void Raise(void);
 	void Lower(void);
