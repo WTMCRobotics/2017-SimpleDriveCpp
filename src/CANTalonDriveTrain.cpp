@@ -25,7 +25,7 @@ CANTalonDriveTrain::CANTalonDriveTrain(frc::XboxController* pController, frc::AD
 	m_rightMasterDrive.SetControlMode(CANSpeedController::kSpeed);
 	m_rightMasterDrive.Set(0.0);
 	m_rightMasterDrive.SetFeedbackDevice(CANTalon::QuadEncoder);
-	m_rightMasterDrive.ConfigEncoderCodesPerRev(DRIVE_ENCDR_STEPS * 4);
+	m_rightMasterDrive.ConfigEncoderCodesPerRev(DRIVE_ENCDR_STEPS *  4);
 	m_rightMasterDrive.ConfigNominalOutputVoltage(+0.0f, -0.0f);
 	m_rightMasterDrive.ConfigPeakOutputVoltage(+12.0f, -12.0f);
 	m_rightMasterDrive.SetVoltageRampRate(DRIVE_RAMP_VoltsPerSec);
@@ -92,15 +92,45 @@ void CANTalonDriveTrain::Update(double leftCommand, double rightCommand, bool sl
 	m_leftTarget  = Deadband(leftCommand)  * DRIVE_MAX_SPEED * m_speedFactor;
 	m_rightTarget = Deadband(rightCommand) * DRIVE_MAX_SPEED * m_speedFactor;
 
+
 	if (slowSpeed)
 	{
 		m_leftTarget  *= kSlowSpeedFactor;
 		m_rightTarget *= kSlowSpeedFactor;
 	}
 
+	m_leftTargetNew = m_leftTarget;
+
+	if(m_leftTarget == 0)
+	{
+		adjust = 0;
+	}
+	else
+	{
+		adjust = abs(m_rightEncoderVel) - abs(m_leftEncoderVel);
+		if (adjust > 100)
+		{
+			m_leftMasterDrive.Set(-(m_leftTargetNew + adjustBy));
+			m_rightMasterDrive.Set(m_leftTarget);
+		}
+		else if(adjust < -100)
+		{
+			m_leftMasterDrive.Set(-(m_leftTargetNew - adjustBy));
+			m_rightMasterDrive.Set(m_leftTarget);
+		}
+		else
+		{
+			m_leftMasterDrive.Set(-m_leftTargetNew);
+			m_rightMasterDrive.Set(m_leftTarget);
+		}
+	}
+
+
+
+	/*
 	m_leftMasterDrive.Set(-m_leftTarget);
 	m_rightMasterDrive.Set(m_rightTarget);
-
+	*/
 	UpdateStats();
 }
 

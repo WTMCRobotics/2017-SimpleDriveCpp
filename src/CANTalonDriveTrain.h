@@ -38,6 +38,11 @@ private:
 	double m_leftTarget  = 0.0;
 	double m_rightTarget = 0.0;
 
+	double m_leftTargetNew = 0.0;
+
+	double adjust = 0.0;
+	double adjustBy = 2;
+
 	double m_leftSpeed	  	 = 0.0;
 	double m_rightSpeed   	 = 0.0;
 	double m_leftPosition 	 = 0.0;
@@ -78,6 +83,8 @@ public:
 
 	void SetSpeedFactor(double speedFactor) { m_speedFactor = fmax(0.0, fmin(m_speedFactor, 1.0)); }
 	double GetSpeedFactor(void) { return m_speedFactor; }
+
+	double GetAdjust(void) {return adjust;}
 
 	double GetLeftSpeed(void)   	{ return m_leftSpeed;}
 	double GetRightSpeed(void)  	{ return m_rightSpeed;}

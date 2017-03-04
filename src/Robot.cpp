@@ -396,6 +396,8 @@ public:
 		frc::SmartDashboard::PutString("AutoState     : ", m_strAutoState[m_autoState]);
 		frc::SmartDashboard::PutString("TraverseState : ", m_strTraverseState[m_traverseState]);
 
+		frc::SmartDashboard::PutNumber("Adjust : ", round(m_driveTrain.GetAdjust(), 2));
+
 		frc::SmartDashboard::PutNumber("Left Joystick  : ", round(m_leftJoystickY, 2));
 		frc::SmartDashboard::PutNumber("Left Command   : ", round(m_driveTrain.GetLeftTarget(), 2));
 		frc::SmartDashboard::PutNumber("Left Speed     : ", round(m_driveTrain.GetLeftSpeed(), 2));
