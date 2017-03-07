@@ -99,39 +99,73 @@ void CANTalonDriveTrain::Update(double leftCommand, double rightCommand, bool sl
 		m_rightTarget *= kSlowSpeedFactor;
 	}
 
-	m_leftTargetNew = m_leftTarget;
-
-	if(m_leftTarget == 0)
-	{
-		adjust = 0;
-	}
-	else
-	{
-		adjust = abs(m_rightEncoderVel) - abs(m_leftEncoderVel);
-		if (adjust > 100)
-		{
-			m_leftMasterDrive.Set(-(m_leftTargetNew + adjustBy));
-			m_rightMasterDrive.Set(m_leftTarget);
-		}
-		else if(adjust < -100)
-		{
-			m_leftMasterDrive.Set(-(m_leftTargetNew - adjustBy));
-			m_rightMasterDrive.Set(m_leftTarget);
-		}
-		else
-		{
-			m_leftMasterDrive.Set(-m_leftTargetNew);
-			m_rightMasterDrive.Set(m_leftTarget);
-		}
-	}
-
-
-
-	/*
 	m_leftMasterDrive.Set(-m_leftTarget);
 	m_rightMasterDrive.Set(m_rightTarget);
-	*/
 	UpdateStats();
+}
+
+void CANTalonDriveTrain::AutoDriveStraight(double leftCommand, double rightCommand)
+{
+	// For testing with just the left joystick
+	m_leftTarget  = Deadband(leftCommand)  * DRIVE_MAX_SPEED * m_speedFactor;
+	// m_leftTarget = for the both motors since using one joystick
+
+
+	if(m_leftTarget == 0)
+		encVelDiff = 0;
+	else
+		encVelDiff = abs(m_rightEncoderVel) - abs(m_leftEncoderVel);
+
+	if (encVelDiff > 100)
+	{
+		m_leftMasterDrive.Set(-(m_leftTarget + adjustBy));
+		m_rightMasterDrive.Set(m_leftTarget);
+	}
+	else if(encVelDiff < -100)
+	{
+		m_leftMasterDrive.Set(-(m_leftTarget - adjustBy));
+		m_rightMasterDrive.Set(m_leftTarget);
+	}
+	// else runs if the difference is -100 to 100
+	else
+	{
+		m_leftMasterDrive.Set(-m_leftTarget);
+		m_rightMasterDrive.Set(m_leftTarget);
+	}
+
+	UpdateStats();
+}
+
+void CANTalonDriveTrain::AutoCalculateTurn(double desiredAngle, double turnSpeed)
+{
+	calculatedSpeed = turnSpeed * ((desiredAngle < 0) ? -100 : 100);
+}
+
+bool CANTalonDriveTrain::AutoTurn(frc::ADXRS450_Gyro gyro, double desiredAngle)
+{
+	currentAngle = gyro.GetAngle();
+	while (currentAngle < desiredAngle)
+	{
+		m_leftMasterDrive.Set(calculatedSpeed);
+		m_rightMasterDrive.Set(calculatedSpeed);
+		currentAngle = gyro.GetAngle();
+	}
+
+	Stop();
+	return true;
+}
+
+bool CANTalonDriveTrain::AutoMove(double desiredRevolutions, double leftSpeed, double rightSpeed)
+{
+	revolutionsDone = m_leftMasterDrive.GetEncPosition() / DRIVE_ENCDR_STEPS;
+	while(revolutionsDone < desiredRevolutions)
+	{
+		AutoDriveStraight(leftSpeed, rightSpeed);
+		revolutionsDone = m_leftMasterDrive.GetEncPosition() / DRIVE_ENCDR_STEPS;
+	}
+
+	Stop();
+	return true;
 }
 
 void CANTalonDriveTrain::AutoTurnStart(double currentAngle, double deltaAngle, double turnSpeed)

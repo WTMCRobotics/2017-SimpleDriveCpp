@@ -38,10 +38,8 @@ private:
 	double m_leftTarget  = 0.0;
 	double m_rightTarget = 0.0;
 
-	double m_leftTargetNew = 0.0;
-
-	double adjust = 0.0;
-	double adjustBy = 2;
+	double encVelDiff = 0.0;
+	double adjustBy = driveStraightAdjustment;
 
 	double m_leftSpeed	  	 = 0.0;
 	double m_rightSpeed   	 = 0.0;
@@ -51,6 +49,10 @@ private:
 	double m_rightEncoderPos = 0.0;
 	double m_leftEncoderVel  = 0.0;
 	double m_rightEncoderVel = 0.0;
+
+	double revolutionsDone = 0;
+	double calculatedSpeed = 0;
+	double currentAngle = 0;
 
 	double m_speedFactor = .25;
 
@@ -75,6 +77,12 @@ public:
 	void UpdateStats(void);
 	void Update(double rightCommand, double leftCommand, bool slowSpeed);
 
+	void AutoDriveStraight(double rightCommand, double leftCommand);
+	void AutoCalculateTurn(double desiredAngle, double turnSpeed);
+	bool AutoTurn(frc::ADXRS450_Gyro gyro, double desiredAngle);
+	bool AutoMove(double desiredRevolutions, double leftSpeed, double rightSpeed);
+
+
 	void AutoTurnStart(double currentAngle, double deltaAngle, double turnSpeed);
 	bool AutoTurnUpdate(double currentAngle);
 	void AutoMoveStart(double legLength, double leftSpeed, double rightSpeed);
@@ -84,7 +92,7 @@ public:
 	void SetSpeedFactor(double speedFactor) { m_speedFactor = fmax(0.0, fmin(m_speedFactor, 1.0)); }
 	double GetSpeedFactor(void) { return m_speedFactor; }
 
-	double GetAdjust(void) {return adjust;}
+	double GetEncoderVelocityDifference(void) {return encVelDiff;}
 
 	double GetLeftSpeed(void)   	{ return m_leftSpeed;}
 	double GetRightSpeed(void)  	{ return m_rightSpeed;}
@@ -94,6 +102,8 @@ public:
 	double GetRightEncoderPos(void) { return m_rightEncoderPos;}
 	double GetLeftEncoderVel(void) 	{ return m_leftEncoderVel;}
 	double GetRightEncoderVel(void) { return m_rightEncoderVel;}
+
+	void resetEncoders(void) {m_leftMasterDrive.SetPosition(0); m_rightMasterDrive.SetPosition(0);}
 
 	double GetLeftTarget(void)		{ return m_leftTarget;}
 	double GetRightTarget(void) 	{ return m_rightTarget;}

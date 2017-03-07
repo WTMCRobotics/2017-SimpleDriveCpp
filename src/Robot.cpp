@@ -221,6 +221,9 @@ public:
 			m_autoState = autoTraverse;
 			break;
 		case autoTraverse:
+			// AutoTraverse() returns true after a segment completes and
+			// the either isn't another segment allowed, or the next segment
+			// has a speed of 0
 			if (AutoTraverse())
 				m_autoState = autoDropGear;
 			break;
@@ -237,39 +240,60 @@ public:
 
 	bool AutoTraverse(void)
 	{
+		// if moving to the next segment (new turn and move values)
 		if (m_traverseState == traverseNext)
 		{
+			// if reached max number of segments or segment specifies a speed of 0
 			if (m_traverseIndex >= AUTO_MOVE_MAX_SEGMENTS ||
 				m_leftSpeed[m_traverseIndex] == 0)
 			{
+				// Done moving. Return true, so m_autoState can move on to dropping gear
 				m_traverseState = traverseDone;
 				return true;
 			}
+			// if max number of segments not reached and the segment doesn't have a speed of 0
 			else
 			{
+				// Start turning
 				m_traverseState = traverseTurn;
-				m_driveTrain.AutoTurnStart(m_gyroAngle, m_angle[m_traverseIndex], kTurnSpeed);
+				m_gyro.Reset();
+				m_driveTrain.AutoCalculateTurn(m_angle[m_traverseIndex], kTurnSpeed);
+				// Commented out to test the other
+				//m_driveTrain.AutoTurnStart(m_gyroAngle, m_angle[m_traverseIndex], kTurnSpeed);
 			}
 		}
 
+		// if in the turning part of a segment
 		if (m_traverseState == traverseTurn)
 		{
-			if (m_driveTrain.AutoTurnUpdate(m_gyroAngle))
+			// AutoTurnUpdate() returns true when robot has turned the correct angle
+			if (m_driveTrain.AutoTurn(m_gyro, m_angle[m_traverseIndex])
+					/*m_driveTrain.AutoTurnUpdate(m_gyroAngle)*/)
 			{
+				// After turning is done, go to the moving part of the segment
 				m_traverseState = traverseMove;
-				m_driveTrain.AutoMoveStart(m_distance[m_traverseIndex], m_leftSpeed[m_traverseIndex], m_rightSpeed[m_traverseIndex]);
+				m_driveTrain.resetEncoders();
+				// Commented out to test the other
+				//m_driveTrain.AutoMoveStart(m_distance[m_traverseIndex], m_leftSpeed[m_traverseIndex], m_rightSpeed[m_traverseIndex]);
 			}
 		}
 
+		// if in the moving part of the segment
 		if (m_traverseState == traverseMove)
 		{
-			if (m_driveTrain.AutoMoveUpdate())
+			// AutoMoveUpdate() returns true when the robot has moved the correct distance
+			if (m_driveTrain.AutoMove(m_distance[m_traverseIndex], m_leftSpeed[m_traverseIndex], m_rightSpeed[m_traverseIndex])
+					/*m_driveTrain.AutoMoveUpdate()*/)
 			{
+				// After moving is done, try to go to the next segment
 				m_traverseState = traverseNext;
+				// Increment the index
 				m_traverseIndex++;
 			}
+
 		}
 
+		// if return true did not trigger because robot in the middle of a segment, return false
 		return false;
 	}
 
@@ -334,11 +358,7 @@ public:
 		UpdateControlData();
 
 		if (m_bButtonB)
-		{
-			// ToDo: Check of SetPosition(0) will accomplish the same thing
-			m_leftPosOffset = m_driveTrain.GetLeftEncoderPos();
-			m_rightPosOffset = m_driveTrain.GetRightEncoderPos();
-		}
+			m_driveTrain.resetEncoders();
 		else if (m_bButtonA)
 		{
 			if (m_autoState != autoDone)
@@ -368,7 +388,10 @@ public:
 
 //		UpdateControlData();
 
-		m_driveTrain.Update(m_leftJoystickY, m_rightJoystickY, m_bLeftBumper);
+		// Commented out to test the auto drive straight in teleop
+		//m_driveTrain.Update(m_leftJoystickY, m_rightJoystickY, m_bLeftBumper);
+		m_driveTrain.AutoDriveStraight(m_leftJoystickY, m_rightJoystickY);
+
 		m_gearLift.Update(m_bButtonX, m_bButtonY, m_bRightBumper, (m_rightTrigger > .7));
 		m_winchMotor.Update(m_leftTrigger);
 
@@ -396,20 +419,20 @@ public:
 		frc::SmartDashboard::PutString("AutoState     : ", m_strAutoState[m_autoState]);
 		frc::SmartDashboard::PutString("TraverseState : ", m_strTraverseState[m_traverseState]);
 
-		frc::SmartDashboard::PutNumber("Adjust : ", round(m_driveTrain.GetAdjust(), 2));
+		frc::SmartDashboard::PutNumber("Adjust : ", round(m_driveTrain.GetEncoderVelocityDifference(), 2));
 
 		frc::SmartDashboard::PutNumber("Left Joystick  : ", round(m_leftJoystickY, 2));
 		frc::SmartDashboard::PutNumber("Left Command   : ", round(m_driveTrain.GetLeftTarget(), 2));
 		frc::SmartDashboard::PutNumber("Left Speed     : ", round(m_driveTrain.GetLeftSpeed(), 2));
 		frc::SmartDashboard::PutNumber("Left Position  : ", round(m_driveTrain.GetLeftPosition(), 2));
-		frc::SmartDashboard::PutNumber("Left Enc. Pos. : ", round(m_driveTrain.GetLeftEncoderPos()-m_leftPosOffset, 2));
+		frc::SmartDashboard::PutNumber("Left Enc. Pos. : ", round(m_driveTrain.GetLeftEncoderPos(), 2));
 		frc::SmartDashboard::PutNumber("Left Enc. Vel. : ", round(m_driveTrain.GetLeftEncoderVel(), 2));
 
 		frc::SmartDashboard::PutNumber("Right Joystick : ", round(m_rightJoystickY, 2));
 		frc::SmartDashboard::PutNumber("Right Command  : ", round(m_driveTrain.GetRightTarget(), 2));
 		frc::SmartDashboard::PutNumber("Right Speed    : ", round(m_driveTrain.GetRightSpeed(), 2));
 		frc::SmartDashboard::PutNumber("Right Position : ", round(m_driveTrain.GetRightPosition(), 2));
-		frc::SmartDashboard::PutNumber("Right Enc. Pos.: ", round(m_driveTrain.GetRightEncoderPos()-m_rightPosOffset, 2));
+		frc::SmartDashboard::PutNumber("Right Enc. Pos.: ", round(m_driveTrain.GetRightEncoderPos(), 2));
 		frc::SmartDashboard::PutNumber("Right Enc. Vel.: ", round(m_driveTrain.GetRightEncoderVel(), 2));
 
 		frc::SmartDashboard::PutNumber("GearLift Up    : ", m_gearLift.IsUp());
