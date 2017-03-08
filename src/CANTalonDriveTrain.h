@@ -79,7 +79,7 @@ public:
 
 	void AutoDriveStraight(double rightCommand, double leftCommand);
 	void AutoCalculateTurn(double desiredAngle, double turnSpeed);
-	bool AutoTurn(frc::ADXRS450_Gyro gyro, double desiredAngle);
+	bool AutoTurn(double desiredAngle);
 	bool AutoMove(double desiredRevolutions, double leftSpeed, double rightSpeed);
 
 
@@ -104,6 +104,8 @@ public:
 	double GetRightEncoderVel(void) { return m_rightEncoderVel;}
 
 	void resetEncoders(void) {m_leftMasterDrive.SetPosition(0); m_rightMasterDrive.SetPosition(0);}
+	void DriveTrainUpdateDashboard(void);
+
 
 	double GetLeftTarget(void)		{ return m_leftTarget;}
 	double GetRightTarget(void) 	{ return m_rightTarget;}

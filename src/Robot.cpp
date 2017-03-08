@@ -205,6 +205,9 @@ public:
 				m_angle[i] 	  = -m_angle[i];
 
 		}
+
+		m_autoState = autoStart;
+		m_traverseState = traverseNext;
 	}
 
 
@@ -258,6 +261,7 @@ public:
 				m_traverseState = traverseTurn;
 				m_gyro.Reset();
 				m_driveTrain.AutoCalculateTurn(m_angle[m_traverseIndex], kTurnSpeed);
+				UpdateDashboard();
 				// Commented out to test the other
 				//m_driveTrain.AutoTurnStart(m_gyroAngle, m_angle[m_traverseIndex], kTurnSpeed);
 			}
@@ -267,12 +271,14 @@ public:
 		if (m_traverseState == traverseTurn)
 		{
 			// AutoTurnUpdate() returns true when robot has turned the correct angle
-			if (m_driveTrain.AutoTurn(m_gyro, m_angle[m_traverseIndex])
+			if (m_driveTrain.AutoTurn(m_angle[m_traverseIndex])
 					/*m_driveTrain.AutoTurnUpdate(m_gyroAngle)*/)
 			{
 				// After turning is done, go to the moving part of the segment
 				m_traverseState = traverseMove;
 				m_driveTrain.resetEncoders();
+				Wait(.5);
+				UpdateDashboard();
 				// Commented out to test the other
 				//m_driveTrain.AutoMoveStart(m_distance[m_traverseIndex], m_leftSpeed[m_traverseIndex], m_rightSpeed[m_traverseIndex]);
 			}
@@ -289,6 +295,7 @@ public:
 				m_traverseState = traverseNext;
 				// Increment the index
 				m_traverseIndex++;
+				UpdateDashboard();
 			}
 
 		}
@@ -318,14 +325,14 @@ public:
 			m_angle[i] = 0.0;
 		}
 
-		m_angle[0] 		= 0.0;
-		m_distance[0] 	  = 19.125 / m_wheelCircumfrence;
-		m_leftSpeed[0]	  = 0.15;
-		m_rightSpeed[0]	  = 0.15;
+		m_angle[0] 		= 15;
+		m_distance[0] 	  = (19.125 * 3)/ m_wheelCircumfrence;
+		m_leftSpeed[0]	  = .15;
+		m_rightSpeed[0]	  = .15;
 
 		return;
 
-		m_angle[1] 		= 15.0;
+		m_angle[1] 		= 0.0;
 		m_distance[1] 	  = 19.125 / m_wheelCircumfrence;
 		m_leftSpeed[1]	  = 0.15;
 		m_rightSpeed[1]	  = 0.15;
@@ -419,7 +426,7 @@ public:
 		frc::SmartDashboard::PutString("AutoState     : ", m_strAutoState[m_autoState]);
 		frc::SmartDashboard::PutString("TraverseState : ", m_strTraverseState[m_traverseState]);
 
-		frc::SmartDashboard::PutNumber("Adjust : ", round(m_driveTrain.GetEncoderVelocityDifference(), 2));
+		frc::SmartDashboard::PutNumber("Encoder Velocity Difference : ", round(m_driveTrain.GetEncoderVelocityDifference(), 2));
 
 		frc::SmartDashboard::PutNumber("Left Joystick  : ", round(m_leftJoystickY, 2));
 		frc::SmartDashboard::PutNumber("Left Command   : ", round(m_driveTrain.GetLeftTarget(), 2));

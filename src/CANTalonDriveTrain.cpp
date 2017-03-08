@@ -141,14 +141,17 @@ void CANTalonDriveTrain::AutoCalculateTurn(double desiredAngle, double turnSpeed
 	calculatedSpeed = turnSpeed * ((desiredAngle < 0) ? -100 : 100);
 }
 
-bool CANTalonDriveTrain::AutoTurn(frc::ADXRS450_Gyro gyro, double desiredAngle)
+bool CANTalonDriveTrain::AutoTurn(double desiredAngle)
 {
-	currentAngle = gyro.GetAngle();
-	while (currentAngle < desiredAngle)
+	frc::SmartDashboard::PutNumber("Desired Angle  : ", desiredAngle);
+	currentAngle = m_pGyro->GetAngle();
+	DriveTrainUpdateDashboard();
+	while (trunc(currentAngle) != desiredAngle)
 	{
 		m_leftMasterDrive.Set(calculatedSpeed);
 		m_rightMasterDrive.Set(calculatedSpeed);
-		currentAngle = gyro.GetAngle();
+		currentAngle = m_pGyro->GetAngle();
+		DriveTrainUpdateDashboard();
 	}
 
 	Stop();
@@ -157,15 +160,29 @@ bool CANTalonDriveTrain::AutoTurn(frc::ADXRS450_Gyro gyro, double desiredAngle)
 
 bool CANTalonDriveTrain::AutoMove(double desiredRevolutions, double leftSpeed, double rightSpeed)
 {
-	revolutionsDone = m_leftMasterDrive.GetEncPosition() / DRIVE_ENCDR_STEPS;
-	while(revolutionsDone < desiredRevolutions)
+	frc::SmartDashboard::PutNumber("Desired Revolutions  : ", desiredRevolutions);
+	DriveTrainUpdateDashboard();
+	revolutionsDone = (static_cast<double>(m_leftMasterDrive.GetEncPosition()) + 2000) / static_cast<double>(DRIVE_ENCDR_STEPS * 4);
+	UpdateStats();
+	while((abs(revolutionsDone)) < desiredRevolutions)
 	{
-		AutoDriveStraight(leftSpeed, rightSpeed);
-		revolutionsDone = m_leftMasterDrive.GetEncPosition() / DRIVE_ENCDR_STEPS;
+		AutoDriveStraight(-leftSpeed, -rightSpeed);
+		revolutionsDone = (static_cast<double>(m_leftMasterDrive.GetEncPosition()) + 2000) / static_cast<double>(DRIVE_ENCDR_STEPS * 4);
+		UpdateStats();
+		DriveTrainUpdateDashboard();
 	}
 
 	Stop();
 	return true;
+}
+
+
+void CANTalonDriveTrain::DriveTrainUpdateDashboard(void)
+{
+	frc::SmartDashboard::PutNumber("Revolutions Done  : ", abs(revolutionsDone));
+	frc::SmartDashboard::PutNumber("Left Enc. Pos. from Drivetrain : ", m_leftEncoderPos);
+	frc::SmartDashboard::PutNumber("Right Enc. Pos. from Drivetrain : ", m_rightEncoderPos);
+	frc::SmartDashboard::PutNumber("Current Angle from Drivetrain : ", currentAngle);
 }
 
 void CANTalonDriveTrain::AutoTurnStart(double currentAngle, double deltaAngle, double turnSpeed)
