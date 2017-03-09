@@ -106,31 +106,32 @@ void CANTalonDriveTrain::Update(double leftCommand, double rightCommand, bool sl
 
 void CANTalonDriveTrain::AutoDriveStraight(double leftCommand, double rightCommand)
 {
-	// For testing with just the left joystick
-	m_leftTarget  = Deadband(leftCommand)  * DRIVE_MAX_SPEED * m_speedFactor;
+	// For testing with just the left joystick, change leftCommand and rightCommand
+	//				to m_leftTarget. Uncomment next line.
+	// m_leftTarget  = Deadband(leftCommand)  * DRIVE_MAX_SPEED * m_speedFactor;
 	// m_leftTarget = for the both motors since using one joystick
 
 
-	if(m_leftTarget == 0)
+	if(leftCommand == 0)
 		encVelDiff = 0;
 	else
 		encVelDiff = abs(m_rightEncoderVel) - abs(m_leftEncoderVel);
 
 	if (encVelDiff > 100)
 	{
-		m_leftMasterDrive.Set(-(m_leftTarget + adjustBy));
-		m_rightMasterDrive.Set(m_leftTarget);
+		m_leftMasterDrive.Set(-(leftCommand + adjustBy));
+		m_rightMasterDrive.Set(rightCommand);
 	}
 	else if(encVelDiff < -100)
 	{
-		m_leftMasterDrive.Set(-(m_leftTarget - adjustBy));
-		m_rightMasterDrive.Set(m_leftTarget);
+		m_leftMasterDrive.Set(-(leftCommand - adjustBy));
+		m_rightMasterDrive.Set(rightCommand);
 	}
 	// else runs if the difference is -100 to 100
 	else
 	{
-		m_leftMasterDrive.Set(-m_leftTarget);
-		m_rightMasterDrive.Set(m_leftTarget);
+		m_leftMasterDrive.Set(-leftCommand);
+		m_rightMasterDrive.Set(rightCommand);
 	}
 
 	UpdateStats();
@@ -143,6 +144,7 @@ void CANTalonDriveTrain::AutoCalculateTurn(double desiredAngle, double turnSpeed
 
 bool CANTalonDriveTrain::AutoTurn(double desiredAngle)
 {
+	// Gyro is reset before this function is called
 	frc::SmartDashboard::PutNumber("Desired Angle  : ", desiredAngle);
 	currentAngle = m_pGyro->GetAngle();
 	DriveTrainUpdateDashboard();
@@ -162,6 +164,7 @@ bool CANTalonDriveTrain::AutoMove(double desiredRevolutions, double leftSpeed, d
 {
 	frc::SmartDashboard::PutNumber("Desired Revolutions  : ", desiredRevolutions);
 	DriveTrainUpdateDashboard();
+	// +2000 attempts to make the wheel stop a little before it gets to the desired spot
 	revolutionsDone = (static_cast<double>(m_leftMasterDrive.GetEncPosition()) + 2000) / static_cast<double>(DRIVE_ENCDR_STEPS * 4);
 	UpdateStats();
 	while((abs(revolutionsDone)) < desiredRevolutions)
@@ -176,7 +179,6 @@ bool CANTalonDriveTrain::AutoMove(double desiredRevolutions, double leftSpeed, d
 	return true;
 }
 
-
 void CANTalonDriveTrain::DriveTrainUpdateDashboard(void)
 {
 	frc::SmartDashboard::PutNumber("Revolutions Done  : ", abs(revolutionsDone));
@@ -185,6 +187,8 @@ void CANTalonDriveTrain::DriveTrainUpdateDashboard(void)
 	frc::SmartDashboard::PutNumber("Current Angle from Drivetrain : ", currentAngle);
 }
 
+
+// Not used
 void CANTalonDriveTrain::AutoTurnStart(double currentAngle, double deltaAngle, double turnSpeed)
 {
 	m_deltaAngle = deltaAngle;
@@ -201,6 +205,7 @@ void CANTalonDriveTrain::AutoTurnStart(double currentAngle, double deltaAngle, d
 	UpdateStats();
 }
 
+// Not used
 bool CANTalonDriveTrain::AutoTurnUpdate(double currentAngle)
 {
 	if(m_deltaAngle == 0)
@@ -223,6 +228,7 @@ bool CANTalonDriveTrain::AutoTurnUpdate(double currentAngle)
 	return false;
 }
 
+// Not used
 void CANTalonDriveTrain::AutoMoveStart(double legLength, double leftSpeed, double rightSpeed)
 {
 	m_startPosition = m_leftMasterDrive.GetPosition();
@@ -234,6 +240,7 @@ void CANTalonDriveTrain::AutoMoveStart(double legLength, double leftSpeed, doubl
 	UpdateStats();
 }
 
+// Not used
 bool CANTalonDriveTrain::AutoMoveUpdate(void)
 {
 	m_leftPosition = m_leftMasterDrive.GetPosition();

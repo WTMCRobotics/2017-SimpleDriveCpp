@@ -158,7 +158,6 @@ public:
 			m_distance[0] 	= kStart1Dist_0 / m_wheelCircumfrence;
 			m_leftSpeed[0]	= kStart1SpeedLf_0;
 			m_rightSpeed[0]	= kStart1SpeedRt_0;
-			m_rightSpeed[0]	= kStart1SpeedRt_0;
 
 			m_angle[1] 		= kStart1Angle_1;
 			m_distance[1] 	= kStart1Dist_1 / m_wheelCircumfrence;
@@ -203,9 +202,9 @@ public:
 		{
 			for (int i=0; i<AUTO_MOVE_MAX_SEGMENTS; i++)
 				m_angle[i] 	  = -m_angle[i];
-
 		}
 
+		// Now able to run the state machine in autonomous
 		m_autoState = autoStart;
 		m_traverseState = traverseNext;
 	}
@@ -395,9 +394,10 @@ public:
 
 //		UpdateControlData();
 
-		// Commented out to test the auto drive straight in teleop
-		//m_driveTrain.Update(m_leftJoystickY, m_rightJoystickY, m_bLeftBumper);
-		m_driveTrain.AutoDriveStraight(m_leftJoystickY, m_rightJoystickY);
+		// Comment this line to test AutoDriveStright in teleop
+		m_driveTrain.Update(m_leftJoystickY, m_rightJoystickY, m_bLeftBumper);
+		// Uncomment to test AutoDriveStraight in teleop
+		//m_driveTrain.AutoDriveStraight(m_leftJoystickY, m_rightJoystickY);
 
 		m_gearLift.Update(m_bButtonX, m_bButtonY, m_bRightBumper, (m_rightTrigger > .7));
 		m_winchMotor.Update(m_leftTrigger);
