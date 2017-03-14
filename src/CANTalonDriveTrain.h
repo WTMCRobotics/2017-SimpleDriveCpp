@@ -80,18 +80,11 @@ public:
 	void Update(double rightCommand, double leftCommand, bool slowSpeed);
 	void ArcadeDrive(double commandYAxis, double commandXAxis, bool slowSpeed);
 
-	void AutoDriveStraight(double rightCommand, double leftCommand);
-	void AutoDriveStraight2(double rightCommand, double leftCommand);
+	void AutoDriveStraightEnc(double rightCommand, double leftCommand);
+	void AutoDriveStraightGyro(double rightCommand, double leftCommand);
 	void AutoCalculateTurn(double desiredAngle, double turnSpeed);
 	bool AutoTurn(double desiredAngle);
 	bool AutoMove(double desiredRevolutions, double leftSpeed, double rightSpeed);
-
-
-	void AutoTurnStart(double currentAngle, double deltaAngle, double turnSpeed);
-	bool AutoTurnUpdate(double currentAngle);
-	void AutoMoveStart(double legLength, double leftSpeed, double rightSpeed);
-	bool AutoMoveUpdate(void);
-
 
 	void SetSpeedFactor(double speedFactor) { m_speedFactor = fmax(0.0, fmin(m_speedFactor, 1.0)); }
 	double GetSpeedFactor(void) { return m_speedFactor; }

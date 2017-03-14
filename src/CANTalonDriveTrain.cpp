@@ -118,14 +118,8 @@ void CANTalonDriveTrain::ArcadeDrive(double commandYAxis, double commandXAxis, b
 	m_rightMasterDrive.Set(m_leftTarget);
 }
 
-void CANTalonDriveTrain::AutoDriveStraight(double leftCommand, double rightCommand)
+void CANTalonDriveTrain::AutoDriveStraightEnc(double leftCommand, double rightCommand)
 {
-	// For testing with just the left joystick, change leftCommand and rightCommand
-	//				to m_leftTarget. Uncomment next line.
-	// m_leftTarget  = Deadband(leftCommand)  * DRIVE_MAX_SPEED * m_speedFactor;
-	// m_leftTarget = for the both motors since using one joystick
-
-
 	if(leftCommand == 0)
 		encVelDiff = 0;
 	else
@@ -151,7 +145,7 @@ void CANTalonDriveTrain::AutoDriveStraight(double leftCommand, double rightComma
 	UpdateStats();
 }
 
-void CANTalonDriveTrain::AutoDriveStraight2(double leftCommand, double rightCommand)
+void CANTalonDriveTrain::AutoDriveStraightGyro(double leftCommand, double rightCommand)
 {
 	currentAngle = m_pGyro->GetAngle();
 	if(trunc(currentAngle) > 3)
@@ -204,7 +198,7 @@ bool CANTalonDriveTrain::AutoMove(double desiredRevolutions, double leftSpeed, d
 	UpdateStats();
 	if((abs(revolutionsDone)) < desiredRevolutions)
 	{
-		AutoDriveStraight(-leftSpeed, -rightSpeed);
+		AutoDriveStraightEnc(-leftSpeed, -rightSpeed);
 		UpdateStats();
 		DriveTrainUpdateDashboard();
 		return false;
@@ -221,82 +215,6 @@ void CANTalonDriveTrain::DriveTrainUpdateDashboard(void)
 	frc::SmartDashboard::PutNumber("Right Enc. Pos. from Drivetrain : ", m_rightEncoderPos);
 	frc::SmartDashboard::PutNumber("Current Angle from Drivetrain : ", currentAngle);
 }
-
-
-// Not used
-void CANTalonDriveTrain::AutoTurnStart(double currentAngle, double deltaAngle, double turnSpeed)
-{
-	m_deltaAngle = deltaAngle;
-	if(deltaAngle == 0)
-		return;
-
-	m_startAngle = currentAngle;
-	m_endAngle = fmod((m_startPosition + deltaAngle), 360.0);
-
-	double speed = turnSpeed * ((deltaAngle < 0) ? -100 : 100);
-	m_leftMasterDrive.Set(speed);
-	m_rightMasterDrive.Set(speed);
-
-	UpdateStats();
-}
-
-// Not used
-bool CANTalonDriveTrain::AutoTurnUpdate(double currentAngle)
-{
-	if(m_deltaAngle == 0)
-		return true;
-
-	m_leftPosition = currentAngle;
-	m_deltaPosition = m_endPosition - m_leftPosition;
-
-	m_leftSpeed = m_leftMasterDrive.GetSpeed();
-	m_rightSpeed = m_rightMasterDrive.GetSpeed();
-
-	if (m_deltaPosition > 0)
-	{
-		Stop();
-		UpdateStats();
-		return true;
-	}
-
-	UpdateStats();
-	return false;
-}
-
-// Not used
-void CANTalonDriveTrain::AutoMoveStart(double legLength, double leftSpeed, double rightSpeed)
-{
-	m_startPosition = m_leftMasterDrive.GetPosition();
-	m_endPosition = m_startPosition - legLength;
-
-	m_leftMasterDrive.Set(leftSpeed * DRIVE_MAX_SPEED);
-	m_rightMasterDrive.Set(-rightSpeed * DRIVE_MAX_SPEED);
-
-	UpdateStats();
-}
-
-// Not used
-bool CANTalonDriveTrain::AutoMoveUpdate(void)
-{
-	m_leftPosition = m_leftMasterDrive.GetPosition();
-	m_rightPosition = m_rightMasterDrive.GetPosition();
-	m_deltaPosition = m_endPosition - m_leftPosition;
-
-	m_leftSpeed = m_leftMasterDrive.GetSpeed();
-	m_rightSpeed = m_rightMasterDrive.GetSpeed();
-
-	if (m_deltaPosition > 0)
-	{
-		Stop();
-		UpdateStats();
-		return true;
-	}
-
-	UpdateStats();
-	return false;
-}
-
-
 
 double CANTalonDriveTrain::Deadband(double commandValue)
 {

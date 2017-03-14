@@ -24,12 +24,6 @@ void Winch::Stop()
 
 void Winch::Update(double winchTrigger)
 {
-	/*if (IsStalled())
-	{
-		Stop();
-		return;
-	}*/
-
 	m_winchTarget = 1 - winchTrigger;
 
 	if (m_winchTarget > .2)
@@ -58,5 +52,4 @@ bool Winch::IsStalled()
 {
 	m_winchCurrent = m_pPDP->GetCurrent(PDP_CHANNEL_WINCH);
 	return (m_winchCurrent > STALL_CURRENT_WINCH);
-
 }
