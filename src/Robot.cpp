@@ -1,4 +1,5 @@
 #include <iostream>
+#include <fstream>
 #include <memory>
 #include <string>
 #include <cmath>
@@ -19,6 +20,9 @@
 #include <PowerDistributionPanel.h>
 #include <ADXRS450_Gyro.h>
 #include <DigitalInput.h>
+#include <Joystick.h>
+#include <Buttons/JoystickButton.h>
+#include <Compressor.h>
 
 #include "CANTalonDrivetrain.h"
 #include "Winch.h"
@@ -32,9 +36,15 @@ class Robot: public frc::IterativeRobot
 {
 
 private:
+	std::ofstream output;
 	frc::PowerDistributionPanel	m_PDP {0};
 	frc::XboxController	m_controller{0};
+	frc::Joystick logitechController{1};
 	frc::ADXRS450_Gyro 	m_gyro{frc::SPI::kOnboardCS0};
+	JoystickButton logitechButtonOverrideLimits{&logitechController, 5};
+	frc::Compressor compressor{PCM_ID};
+
+	bool firstTimeAuto;
 
 	DriverStation::Alliance m_allianceColor;
 	int m_allianceLocation;
@@ -47,6 +57,7 @@ private:
 
 	double 	m_gyroAngle;
 	double 	m_leftJoystickY;
+	double  m_leftJoystickX;
 	double 	m_rightJoystickY;
 	double 	m_leftTrigger;
 	double 	m_rightTrigger;
@@ -57,9 +68,16 @@ private:
 	bool	m_bButtonX;
 	bool	m_bButtonY;
 
+	double m_logitechYAxis;
+	double m_logitechThrottle;
+	bool m_logitechTrigger;
+	bool m_logitechOverrideButton;
+
+
+
 	frc::LiveWindow* lw = LiveWindow::GetInstance();
 
-	std::shared_ptr<NetworkTable> axisCameraTable;
+	//std::shared_ptr<NetworkTable> axisCameraTable;
 
 
 	// autonomous states
@@ -101,8 +119,13 @@ public:
 
 	void RobotInit()
 	{
+		printf("%s\n", "RobotInit");
+		std::cout << "RobotInit" << std::endl;
+		output.open("C:/Users/Public/Documents/FRC/Log Files/outputfile.txt");
 		m_allianceColor    = DriverStation::GetInstance().GetAlliance();
 		m_allianceLocation = DriverStation::GetInstance().GetLocation();
+		//printf("%s %n\n", "Alliance Color   :", m_allianceColor);
+		//printf("%s %n\n", "Alliance Location   :", m_allianceLocation);
 		std::cout << "Alliance Color   : " << m_allianceColor << std::endl;
 		std::cout << "Alliance Location: " << m_allianceLocation << std::endl;
 
@@ -114,17 +137,20 @@ public:
 		else
 			m_wheelCircumfrence = COMPETITION_ROBOT_WHEEL_CIRCUMFRENCE;
 
-		frc::CameraServer::GetInstance()->StartAutomaticCapture("Driving Camera", 0);
+		frc::CameraServer::GetInstance()->StartAutomaticCapture("Gear Camera", 0);
+		//frc::CameraServer::GetInstance()->StartAutomaticCapture("Rear View Camera", 1);
 
 //.		axisCameraTable = NetworkTable::GetTable("GRIP/contoursReport");
 //.		double gripNumbers[1];
 //.		axisCameraTable->GetNumberArray("contoursReport", gripNumbers);
 //.		frc::SmartDashboard::PutNumber("Center X: ", gripNumbers[0]);
+		firstTimeAuto = true;
+		InitializeAutonomous();
 
 	}
 
 
-	//=================================================================================
+	//=============================================================================
 	// Autonomous Initialize
 	//
 	//	Starting Location key:
@@ -135,78 +161,10 @@ public:
 	//		 	| 3				3 |
 	//			+-----------------+
 	//
-	void AutonomousInit() override
+	void AutonomousInit() //override
 	{
-		m_traverseIndex = 0;
-
-		// clear all traverse segments
-		//
-		for (int i=0; i<AUTO_MOVE_MAX_SEGMENTS; i++)
-		{
-			m_distance[i] = 0.0;
-			m_leftSpeed[i] = 0.0;
-			m_rightSpeed[i] = 0.0;
-			m_angle[i] = 0.0;
-		}
-
-		// The autonomous traverse path depends on the starting location
-		//
-		switch (m_allianceLocation)
-		{
-		case 1:
-			m_angle[0] 		= kStart1Angle_0;
-			m_distance[0] 	= kStart1Dist_0 / m_wheelCircumfrence;
-			m_leftSpeed[0]	= kStart1SpeedLf_0;
-			m_rightSpeed[0]	= kStart1SpeedRt_0;
-
-			m_angle[1] 		= kStart1Angle_1;
-			m_distance[1] 	= kStart1Dist_1 / m_wheelCircumfrence;
-			m_leftSpeed[1]	= kStart1SpeedLf_1;
-			m_rightSpeed[1]	= kStart1SpeedRt_1;
-			break;
-		case 2:
-			m_angle[0] 		= kStart2Angle_0;
-			m_distance[0] 	= kStart2Dist_0 / m_wheelCircumfrence;
-			m_leftSpeed[0]	= kStart2SpeedLf_0;
-			m_rightSpeed[0]	= kStart2SpeedRt_0;
-
-			m_angle[1] 		= kStart2Angle_1;
-			m_distance[1] 	= kStart2Dist_1 / m_wheelCircumfrence;
-			m_leftSpeed[1]	= kStart2SpeedLf_1;
-			m_rightSpeed[1]	= kStart2SpeedRt_1;
-
-			m_angle[2] 		= kStart2Angle_2;
-			m_distance[2] 	= kStart2Dist_2 / m_wheelCircumfrence;
-			m_leftSpeed[2]	= kStart2SpeedLf_2;
-			m_rightSpeed[2]	= kStart2SpeedRt_2;
-			break;
-		case 3:
-			m_angle[0] 		= kStart3Angle_0;
-			m_distance[0] 	= kStart3Dist_0 / m_wheelCircumfrence;
-			m_leftSpeed[0]	= kStart3SpeedLf_0;
-			m_rightSpeed[0]	= kStart3SpeedRt_0;
-
-			m_angle[1] 		= kStart3Angle_1;
-			m_distance[1] 	= kStart3Dist_1 / m_wheelCircumfrence;
-			m_leftSpeed[1]	= kStart3SpeedLf_1;
-			m_rightSpeed[1]	= kStart3SpeedRt_1;
-			break;
-		default:
-			break;
-		}
-
-		// Autonomous traverse path was calculated from Red Alliance starting location.
-		//	If the actual alliance is Red, the angles need to be flipped.
-		//
-		if (m_allianceColor == DriverStation::Alliance::kBlue)
-		{
-			for (int i=0; i<AUTO_MOVE_MAX_SEGMENTS; i++)
-				m_angle[i] 	  = -m_angle[i];
-		}
-
-		// Now able to run the state machine in autonomous
-		m_autoState = autoStart;
-		m_traverseState = traverseNext;
+		printf("%s\n", "AutoInit");
+		InitializeAutonomous();
 	}
 
 
@@ -217,6 +175,15 @@ public:
 	//
 	void AutonomousPeriodic()
 	{
+		if(firstTimeAuto)
+		{
+			printf("%s\n", "AutoPeriodic");
+			InitializeAutonomous();
+		}
+		firstTimeAuto = false;
+
+		output << "Auto Periodic Called\n";
+		UpdateCompressor();
 		switch (m_autoState)
 		{
 		case autoStart:
@@ -256,11 +223,16 @@ public:
 			// if max number of segments not reached and the segment doesn't have a speed of 0
 			else
 			{
+				m_traverseState = traverseMove;
+
+				/*
 				// Start turning
 				m_traverseState = traverseTurn;
 				m_gyro.Reset();
 				m_driveTrain.AutoCalculateTurn(m_angle[m_traverseIndex], kTurnSpeed);
-				UpdateDashboard();
+				UpdateDashboard();*/
+
+
 				// Commented out to test the other
 				//m_driveTrain.AutoTurnStart(m_gyroAngle, m_angle[m_traverseIndex], kTurnSpeed);
 			}
@@ -286,6 +258,7 @@ public:
 		// if in the moving part of the segment
 		if (m_traverseState == traverseMove)
 		{
+			m_gyro.Reset();
 			// AutoMoveUpdate() returns true when the robot has moved the correct distance
 			if (m_driveTrain.AutoMove(m_distance[m_traverseIndex], m_leftSpeed[m_traverseIndex], m_rightSpeed[m_traverseIndex])
 					/*m_driveTrain.AutoMoveUpdate()*/)
@@ -305,6 +278,7 @@ public:
 
 	void TeleopInit()
 	{
+		firstTimeAuto = true;
 		m_driveTrain.Stop();
 
 		frc::SmartDashboard::PutString("Alliance Color    : ", (m_allianceColor == DriverStation::Alliance::kRed) ? "Red" : "Blue");
@@ -342,6 +316,7 @@ public:
 	{
 		m_gyroAngle = m_gyro.GetAngle();
 		m_leftJoystickY  = m_controller.GetY(frc::GenericHID::kLeftHand);
+		m_leftJoystickX = m_controller.GetX(frc::GenericHID::kLeftHand);
 		m_rightJoystickY = m_controller.GetY(frc::GenericHID::kRightHand);
 
 		m_leftTrigger = m_controller.GetTriggerAxis(frc::GenericHID::kLeftHand);
@@ -354,6 +329,11 @@ public:
 		m_bButtonB = m_controller.GetBButton();
 		m_bButtonX = m_controller.GetXButton();
 		m_bButtonY = m_controller.GetYButton();
+
+		m_logitechYAxis = logitechController.GetY();
+		m_logitechTrigger = logitechController.GetTrigger();
+		m_logitechThrottle = logitechController.GetThrottle();
+		m_logitechOverrideButton = logitechButtonOverrideLimits.Get();
 	}
 
 	double m_leftPosOffset = 0.0;
@@ -363,7 +343,7 @@ public:
 	{
 		UpdateControlData();
 
-		if (m_bButtonB)
+		/*if (m_bButtonB)
 			m_driveTrain.resetEncoders();
 		else if (m_bButtonA)
 		{
@@ -390,17 +370,23 @@ public:
 				InitTraverse();
 				m_autoState = autoStart;
 			}
-		}
+		}*/
 
 //		UpdateControlData();
 
-		// Comment this line to test AutoDriveStright in teleop
+
+		// Commented out to test the auto drive straight in teleop
+		/*if(m_bRightBumper)
+			m_driveTrain.ArcadeDrive(m_leftJoystickY, m_leftJoystickX, m_bLeftBumper);
+		else*/
+
 		m_driveTrain.Update(m_leftJoystickY, m_rightJoystickY, m_bLeftBumper);
 		// Uncomment to test AutoDriveStraight in teleop
 		//m_driveTrain.AutoDriveStraight(m_leftJoystickY, m_rightJoystickY);
 
-		m_gearLift.Update(m_bButtonX, m_bButtonY, m_bRightBumper, (m_rightTrigger > .7));
-		m_winchMotor.Update(m_leftTrigger);
+		m_gearLift.Update(m_logitechYAxis, m_logitechTrigger, m_logitechOverrideButton);
+		m_winchMotor.Update(m_logitechThrottle);
+		UpdateCompressor();
 
 		UpdateDashboard();
 	}
@@ -410,6 +396,15 @@ public:
 		//lw->Run();
 
 
+	}
+
+
+	void UpdateCompressor(void)
+	{
+		if(!compressor.GetPressureSwitchValue())
+			compressor.Start();
+		else
+			compressor.Stop();
 	}
 
 	void UpdateDashboard(void)
@@ -460,7 +455,122 @@ public:
 		frc::SmartDashboard::PutNumber("Start Angle    : ", round(m_driveTrain.GetStartPosition(), 2));
 		frc::SmartDashboard::PutNumber("End Angle      : ", round(m_driveTrain.GetEndPosition(), 2));
 		frc::SmartDashboard::PutNumber("Delta Angle    : ", round(m_driveTrain.GetDeltaPosition(), 2));
+
+
+		frc::SmartDashboard::PutNumber("Y-Axis Joystick Test  : ", round(m_logitechYAxis, 2));
+		frc::SmartDashboard::PutBoolean("Trigger Button : ", m_logitechTrigger);
+		frc::SmartDashboard::PutNumber("Slider Joystick Test : ", round(m_logitechThrottle, 2));
+		frc::SmartDashboard::PutBoolean("Limit Override : ", m_logitechOverrideButton);
+
+		frc::SmartDashboard::PutBoolean("Switch Valve : ", compressor.GetPressureSwitchValue());
+		frc::SmartDashboard::PutBoolean("Compressor On : ", compressor.Enabled());
+
+		frc::SmartDashboard::PutBoolean("First Time Auto  : ", firstTimeAuto);
+
+
+		frc::SmartDashboard::PutNumber("Auto Distance     : ", round(m_distance[m_traverseIndex], 2));
+		frc::SmartDashboard::PutNumber("Auto Angle    : ", round(m_angle[m_traverseIndex], 2));
+		frc::SmartDashboard::PutNumber("Auto Left Speed      : ", round(m_leftSpeed[m_traverseIndex], 2));
+		frc::SmartDashboard::PutNumber("Auto Right Speed    : ", round(m_rightSpeed[m_traverseIndex], 2));
 	}
+
+	void InitializeAutonomous()
+	{
+		m_traverseIndex = 0;
+
+		// clear all traverse segments
+		//
+		for (int i=0; i<AUTO_MOVE_MAX_SEGMENTS; i++)
+		{
+			m_distance[i] = 0.0;
+			m_leftSpeed[i] = 0.0;
+			m_rightSpeed[i] = 0.0;
+			m_angle[i] = 0.0;
+		}
+
+		m_angle[0] 		= 0;
+		m_distance[0] 	= 125 / m_wheelCircumfrence;
+		m_leftSpeed[0]	= .2;
+		m_rightSpeed[0]	= .42;
+
+		/*
+		// The autonomous traverse path depends on the starting location
+		//
+		switch (m_allianceLocation)
+		{
+			case 1:
+				m_angle[0] 		= kStart1Angle_0;
+				m_distance[0] 	= kStart1Dist_0 / m_wheelCircumfrence;
+				m_leftSpeed[0]	= kStart1SpeedLf_0;
+				m_rightSpeed[0]	= kStart1SpeedRt_0;
+
+				m_angle[1] 		= kStart1Angle_1;
+				m_distance[1] 	= kStart1Dist_1 / m_wheelCircumfrence;
+				m_leftSpeed[1]	= kStart1SpeedLf_1;
+				m_rightSpeed[1]	= kStart1SpeedRt_1;
+				break;
+			case 2:
+				m_angle[0] 		= kStart2Angle_0;
+				m_distance[0] 	= kStart2Dist_0 / m_wheelCircumfrence;
+				m_leftSpeed[0]	= kStart2SpeedLf_0;
+				m_rightSpeed[0]	= kStart2SpeedRt_0;
+
+				m_angle[1] 		= kStart2Angle_1;
+				m_distance[1] 	= kStart2Dist_1 / m_wheelCircumfrence;
+				m_leftSpeed[1]	= kStart2SpeedLf_1;
+				m_rightSpeed[1]	= kStart2SpeedRt_1;
+
+				m_angle[2] 		= kStart2Angle_2;
+				m_distance[2] 	= kStart2Dist_2 / m_wheelCircumfrence;
+				m_leftSpeed[2]	= kStart2SpeedLf_2;
+				m_rightSpeed[2]	= kStart2SpeedRt_2;
+				break;
+			case 3:
+				m_angle[0] 		= kStart3Angle_0;
+				m_distance[0] 	= kStart3Dist_0 / m_wheelCircumfrence;
+				m_leftSpeed[0]	= kStart3SpeedLf_0;
+				m_rightSpeed[0]	= kStart3SpeedRt_0;
+
+				m_angle[1] 		= kStart3Angle_1;
+				m_distance[1] 	= kStart3Dist_1 / m_wheelCircumfrence;
+				m_leftSpeed[1]	= kStart3SpeedLf_1;
+				m_rightSpeed[1]	= kStart3SpeedRt_1;
+				break;
+			default:
+				break;
+		}
+
+						// Autonomous traverse path was calculated from Red Alliance starting location.
+						//	If the actual alliance is Red, the angles need to be flipped.
+						//
+						if (m_allianceColor == DriverStation::Alliance::kBlue)
+						{
+							for (int i=0; i<AUTO_MOVE_MAX_SEGMENTS; i++)
+								m_angle[i] 	  = -m_angle[i];
+						}*/
+
+		// Now able to run the state machine in autonomous
+		m_autoState = autoStart;
+		m_traverseState = traverseNext;
+
+		m_driveTrain.resetEncoders();
+	}
+
+	void DisabledInit()
+	{
+		printf("%s\n", "DisabledInit");
+		firstTimeAuto = true;
+	}
+
+	void DisabledPeriodic()
+	{
+		m_driveTrain.Stop();
+	}
+
+	void RobotPeriodic()
+	{
+	}
+
 
 	double round(double value, int numDecimals)
 	{

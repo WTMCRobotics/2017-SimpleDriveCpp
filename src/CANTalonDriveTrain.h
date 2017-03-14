@@ -38,6 +38,8 @@ private:
 	double m_leftTarget  = 0.0;
 	double m_rightTarget = 0.0;
 
+	double m_arcadeYAxisTarget = 0.0;
+
 	double encVelDiff = 0.0;
 	double adjustBy = driveStraightAdjustment;
 
@@ -76,8 +78,10 @@ public:
 	void Stop();
 	void UpdateStats(void);
 	void Update(double rightCommand, double leftCommand, bool slowSpeed);
+	void ArcadeDrive(double commandYAxis, double commandXAxis, bool slowSpeed);
 
 	void AutoDriveStraight(double rightCommand, double leftCommand);
+	void AutoDriveStraight2(double rightCommand, double leftCommand);
 	void AutoCalculateTurn(double desiredAngle, double turnSpeed);
 	bool AutoTurn(double desiredAngle);
 	bool AutoMove(double desiredRevolutions, double leftSpeed, double rightSpeed);

@@ -14,8 +14,8 @@
 
 #include "RobotDefs.h"
 
-#define RAISE_SPEED  0.75
-#define LOWER_SPEED	 0.75
+#define RAISE_SPEED  0.95
+#define LOWER_SPEED	 0.95
 
 
 class GearLift
@@ -30,6 +30,8 @@ private:
 	bool m_bGearLiftDown;
 	bool m_bGearLiftUp;
 
+	double m_gearLiftTarget = 0;
+
 	bool m_bGearLiftClamped;
 	bool m_bGearLiftStalled;
 
@@ -38,7 +40,7 @@ public:
 	virtual ~GearLift();
 
 	void Stop(void);
-	void Update(bool bLiftRaise, bool bLiftLower, bool bClampControl, bool bOverrideLimits);
+	void Update(double joystickCommand, bool bClampControl, bool bOverrideLimits);
 
 	void Raise(void);
 	void Lower(void);

@@ -36,6 +36,7 @@ private:
 #error "No Winch motor control type defined!"
 #endif
 
+	double m_winchTarget = 0;
 	double m_winchCurrent = 0.0;
 
 public:

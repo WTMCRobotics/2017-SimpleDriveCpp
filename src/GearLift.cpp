@@ -24,7 +24,7 @@ void GearLift::Stop()
 	m_liftMotor.Set(0.0);
 }
 
-void GearLift::Update(bool bLiftRaise, bool bLiftLower, bool bClampControl, bool bOverrideLimits)
+void GearLift::Update(double joystickCommand, bool bClampControl, bool bOverrideLimits)
 {
 	// The gear lift switched are N/O switches that pull the input to ground when
 	//	they are closed. The state of the actual switches are inverted, since otherwise
@@ -37,17 +37,19 @@ void GearLift::Update(bool bLiftRaise, bool bLiftLower, bool bClampControl, bool
 	m_bGearLiftDown = m_diGearLiftDown.Get();
 	m_bGearLiftUp   = m_diGearLiftUp.Get();
 
+	m_gearLiftTarget = (fabs(joystickCommand) >= GEAR_LIFT_COMMAND_DEADBAND) ? joystickCommand : 0.0;
+
 	// gear lifting logic
 	//
 	if (IsStalled())
 	{
 		Stop();
 	}
-	else if (bLiftRaise && (!m_bGearLiftUp || bOverrideLimits) )
+	else if ((m_gearLiftTarget > 0) && (!m_bGearLiftUp || bOverrideLimits) )
 	{
 		Raise();
 	}
-	else if (bLiftLower && (!m_bGearLiftDown || bOverrideLimits) )
+	else if ((m_gearLiftTarget < 0) && (m_bGearLiftDown || bOverrideLimits) )
 	{
 			Lower();
 	}

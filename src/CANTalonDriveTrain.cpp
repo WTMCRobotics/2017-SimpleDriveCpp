@@ -104,6 +104,20 @@ void CANTalonDriveTrain::Update(double leftCommand, double rightCommand, bool sl
 	UpdateStats();
 }
 
+void CANTalonDriveTrain::ArcadeDrive(double commandYAxis, double commandXAxis, bool slowSpeed)
+{
+	m_leftTarget  = Deadband(commandYAxis)  * DRIVE_MAX_SPEED * m_speedFactor;
+	commandXAxis = Deadband(commandXAxis);
+
+	if (slowSpeed)
+	{
+		m_leftTarget  *= kSlowSpeedFactor;
+	}
+
+	m_leftMasterDrive.Set(-(m_leftTarget + commandXAxis));
+	m_rightMasterDrive.Set(m_leftTarget);
+}
+
 void CANTalonDriveTrain::AutoDriveStraight(double leftCommand, double rightCommand)
 {
 	// For testing with just the left joystick, change leftCommand and rightCommand
@@ -119,23 +133,44 @@ void CANTalonDriveTrain::AutoDriveStraight(double leftCommand, double rightComma
 
 	if (encVelDiff > 100)
 	{
-		m_leftMasterDrive.Set(-(leftCommand + adjustBy));
-		m_rightMasterDrive.Set(rightCommand);
+		m_leftMasterDrive.Set(-((leftCommand * DRIVE_MAX_SPEED * m_speedFactor)));
+		m_rightMasterDrive.Set((rightCommand * DRIVE_MAX_SPEED * m_speedFactor)); // - adjustBy);
 	}
 	else if(encVelDiff < -100)
 	{
-		m_leftMasterDrive.Set(-(leftCommand - adjustBy));
-		m_rightMasterDrive.Set(rightCommand);
+		m_leftMasterDrive.Set(-((leftCommand * DRIVE_MAX_SPEED * m_speedFactor))); //- adjustBy));
+		m_rightMasterDrive.Set(rightCommand * DRIVE_MAX_SPEED * m_speedFactor);
 	}
 	// else runs if the difference is -100 to 100
 	else
 	{
-		m_leftMasterDrive.Set(-leftCommand);
-		m_rightMasterDrive.Set(rightCommand);
+		m_leftMasterDrive.Set(-(leftCommand * DRIVE_MAX_SPEED * m_speedFactor));
+		m_rightMasterDrive.Set(rightCommand * DRIVE_MAX_SPEED * m_speedFactor);
 	}
 
 	UpdateStats();
 }
+
+void CANTalonDriveTrain::AutoDriveStraight2(double leftCommand, double rightCommand)
+{
+	currentAngle = m_pGyro->GetAngle();
+	if(trunc(currentAngle) > 3)
+	{
+		m_leftMasterDrive.Set(-(leftCommand * DRIVE_MAX_SPEED * m_speedFactor));
+		m_rightMasterDrive.Set((rightCommand + adjustBy) * DRIVE_MAX_SPEED * m_speedFactor);
+	}
+	else if(trunc(currentAngle) < -3)
+	{
+		m_leftMasterDrive.Set(-(leftCommand * DRIVE_MAX_SPEED * m_speedFactor));
+		m_rightMasterDrive.Set((rightCommand - adjustBy) * DRIVE_MAX_SPEED * m_speedFactor);
+	}
+	else
+	{
+		m_leftMasterDrive.Set(-(leftCommand * DRIVE_MAX_SPEED * m_speedFactor));
+			m_rightMasterDrive.Set(rightCommand * DRIVE_MAX_SPEED * m_speedFactor);
+	}
+}
+
 
 void CANTalonDriveTrain::AutoCalculateTurn(double desiredAngle, double turnSpeed)
 {
@@ -167,12 +202,12 @@ bool CANTalonDriveTrain::AutoMove(double desiredRevolutions, double leftSpeed, d
 	// +2000 attempts to make the wheel stop a little before it gets to the desired spot
 	revolutionsDone = (static_cast<double>(m_leftMasterDrive.GetEncPosition()) + 2000) / static_cast<double>(DRIVE_ENCDR_STEPS * 4);
 	UpdateStats();
-	while((abs(revolutionsDone)) < desiredRevolutions)
+	if((abs(revolutionsDone)) < desiredRevolutions)
 	{
 		AutoDriveStraight(-leftSpeed, -rightSpeed);
-		revolutionsDone = (static_cast<double>(m_leftMasterDrive.GetEncPosition()) + 2000) / static_cast<double>(DRIVE_ENCDR_STEPS * 4);
 		UpdateStats();
 		DriveTrainUpdateDashboard();
+		return false;
 	}
 
 	Stop();

@@ -24,14 +24,16 @@ void Winch::Stop()
 
 void Winch::Update(double winchTrigger)
 {
-	if (IsStalled())
+	/*if (IsStalled())
 	{
 		Stop();
 		return;
-	}
+	}*/
 
-	if (winchTrigger > .2)
-		m_winchMotor.Set(winchTrigger);
+	m_winchTarget = 1 - winchTrigger;
+
+	if (m_winchTarget > .2)
+		m_winchMotor.Set(-(m_winchTarget/2));
 	else
 		Stop();
 }
