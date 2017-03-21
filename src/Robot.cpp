@@ -36,7 +36,6 @@ class Robot: public frc::IterativeRobot
 {
 
 private:
-	std::ofstream output;
 	frc::PowerDistributionPanel	m_PDP {0};
 	frc::XboxController	m_controller{0};
 	frc::Joystick logitechController{1};
@@ -72,8 +71,6 @@ private:
 	double m_logitechThrottle;
 	bool m_logitechTrigger;
 	bool m_logitechOverrideButton;
-
-
 
 	frc::LiveWindow* lw = LiveWindow::GetInstance();
 
@@ -118,7 +115,6 @@ public:
 	{
 		printf("%s\n", "RobotInit");
 		std::cout << "RobotInit" << std::endl;
-		output.open("C:/Users/Public/Documents/FRC/Log Files/outputfile.txt");
 		m_allianceColor    = DriverStation::GetInstance().GetAlliance();
 		m_allianceLocation = DriverStation::GetInstance().GetLocation();
 
@@ -174,7 +170,6 @@ public:
 		}
 		firstTimeAuto = false;
 
-		output << "Auto Periodic Called\n";
 		UpdateCompressor();
 		switch (m_autoState)
 		{
@@ -387,8 +382,8 @@ public:
 
 		m_angle[0] 		= 0;
 		m_distance[0] 	= 125 / m_wheelCircumfrence;
-		m_leftSpeed[0]	= .2;
-		m_rightSpeed[0]	= .42;
+		m_leftSpeed[0]	= .3; //.2;
+		m_rightSpeed[0]	= .3; //.42;
 
 		// Now able to run the state machine in autonomous
 		m_autoState = autoStart;

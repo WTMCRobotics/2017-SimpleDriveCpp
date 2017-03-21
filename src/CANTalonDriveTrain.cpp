@@ -6,6 +6,7 @@
  */
 
 #include <CANTalonDriveTrain.h>
+#include <iostream>
 
 CANTalonDriveTrain::CANTalonDriveTrain(frc::XboxController* pController, frc::ADXRS450_Gyro*  pGyro)
 {
@@ -148,21 +149,26 @@ void CANTalonDriveTrain::AutoDriveStraightEnc(double leftCommand, double rightCo
 void CANTalonDriveTrain::AutoDriveStraightGyro(double leftCommand, double rightCommand)
 {
 	currentAngle = m_pGyro->GetAngle();
-	if(trunc(currentAngle) > 3)
+	if(trunc(currentAngle) > 1)
 	{
-		m_leftMasterDrive.Set(-(leftCommand * DRIVE_MAX_SPEED * m_speedFactor));
-		m_rightMasterDrive.Set((rightCommand + adjustBy) * DRIVE_MAX_SPEED * m_speedFactor);
+		m_leftMasterDrive.Set(-(leftCommand * DRIVE_MAX_SPEED * kSlowSpeedFactor) * adjustBy);
+		m_rightMasterDrive.Set((rightCommand) * DRIVE_MAX_SPEED * kSlowSpeedFactor);
+		std::cout << "Left Fast\n";
 	}
-	else if(trunc(currentAngle) < -3)
+	else if(trunc(currentAngle) < -1)
 	{
-		m_leftMasterDrive.Set(-(leftCommand * DRIVE_MAX_SPEED * m_speedFactor));
-		m_rightMasterDrive.Set((rightCommand - adjustBy) * DRIVE_MAX_SPEED * m_speedFactor);
+		m_leftMasterDrive.Set(-(leftCommand * DRIVE_MAX_SPEED * kSlowSpeedFactor));
+		m_rightMasterDrive.Set((rightCommand * adjustBy) * DRIVE_MAX_SPEED * kSlowSpeedFactor);
+		std::cout << "Right Fast\n";
 	}
 	else
 	{
-		m_leftMasterDrive.Set(-(leftCommand * DRIVE_MAX_SPEED * m_speedFactor));
-			m_rightMasterDrive.Set(rightCommand * DRIVE_MAX_SPEED * m_speedFactor);
+		m_leftMasterDrive.Set(-(leftCommand * DRIVE_MAX_SPEED * kSlowSpeedFactor));
+		m_rightMasterDrive.Set(rightCommand * DRIVE_MAX_SPEED * kSlowSpeedFactor);
+		std::cout << "Straight\n";
 	}
+
+	DriveTrainUpdateDashboard();
 }
 
 
@@ -198,7 +204,7 @@ bool CANTalonDriveTrain::AutoMove(double desiredRevolutions, double leftSpeed, d
 	UpdateStats();
 	if((abs(revolutionsDone)) < desiredRevolutions)
 	{
-		AutoDriveStraightEnc(-leftSpeed, -rightSpeed);
+		AutoDriveStraightGyro(-leftSpeed, -rightSpeed);
 		UpdateStats();
 		DriveTrainUpdateDashboard();
 		return false;
@@ -214,6 +220,7 @@ void CANTalonDriveTrain::DriveTrainUpdateDashboard(void)
 	frc::SmartDashboard::PutNumber("Left Enc. Pos. from Drivetrain : ", m_leftEncoderPos);
 	frc::SmartDashboard::PutNumber("Right Enc. Pos. from Drivetrain : ", m_rightEncoderPos);
 	frc::SmartDashboard::PutNumber("Current Angle from Drivetrain : ", currentAngle);
+	std::cout << "Gryo: " << trunc(currentAngle) << std::endl;
 }
 
 double CANTalonDriveTrain::Deadband(double commandValue)
