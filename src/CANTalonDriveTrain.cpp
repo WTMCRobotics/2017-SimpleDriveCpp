@@ -12,7 +12,6 @@ CANTalonDriveTrain::CANTalonDriveTrain(frc::XboxController* pController, frc::AD
 {
 	m_pController = pController;
 	m_pGyro		  = pGyro;
-	m_pGyro->Calibrate();
 
 	m_leftSpeed 	= 0.0;
 	m_rightSpeed 	= 0.0;
@@ -175,6 +174,7 @@ void CANTalonDriveTrain::AutoDriveStraightGyro(double leftCommand, double rightC
 void CANTalonDriveTrain::AutoCalculateTurn(double desiredAngle, double turnSpeed)
 {
 	calculatedSpeed = turnSpeed * ((desiredAngle < 0) ? -100 : 100);
+	m_pGyro->Reset();
 }
 
 bool CANTalonDriveTrain::AutoTurn(double desiredAngle)
@@ -183,12 +183,12 @@ bool CANTalonDriveTrain::AutoTurn(double desiredAngle)
 	frc::SmartDashboard::PutNumber("Desired Angle  : ", desiredAngle);
 	currentAngle = m_pGyro->GetAngle();
 	DriveTrainUpdateDashboard();
-	while (trunc(currentAngle) != desiredAngle)
+	if (abs(trunc(currentAngle)) < abs(desiredAngle))
 	{
 		m_leftMasterDrive.Set(calculatedSpeed);
 		m_rightMasterDrive.Set(calculatedSpeed);
-		currentAngle = m_pGyro->GetAngle();
 		DriveTrainUpdateDashboard();
+		return false;
 	}
 
 	Stop();
@@ -220,7 +220,7 @@ void CANTalonDriveTrain::DriveTrainUpdateDashboard(void)
 	frc::SmartDashboard::PutNumber("Left Enc. Pos. from Drivetrain : ", m_leftEncoderPos);
 	frc::SmartDashboard::PutNumber("Right Enc. Pos. from Drivetrain : ", m_rightEncoderPos);
 	frc::SmartDashboard::PutNumber("Current Angle from Drivetrain : ", currentAngle);
-	std::cout << "Gryo: " << trunc(currentAngle) << std::endl;
+	std::cout << "Gyro: " << trunc(currentAngle) << std::endl;
 }
 
 double CANTalonDriveTrain::Deadband(double commandValue)

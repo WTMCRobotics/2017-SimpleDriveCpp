@@ -66,7 +66,7 @@
 
 // starting location 1 (LEFT lane for Red Alliance, RIGHT for Blue Alliance)
 #define kStart1Angle_0		+0.0
-#define kStart1Dist_0		  120 //4.00
+#define kStart1Dist_0		  72 //4.00
 #define kStart1SpeedLf_0	  0.555
 #define kStart1SpeedRt_0	  0.55
 #define kStart1Angle_1		60.0

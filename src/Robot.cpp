@@ -134,7 +134,6 @@ public:
 
 		firstTimeAuto = true;
 		InitializeAutonomous();
-
 	}
 
 
@@ -212,6 +211,7 @@ public:
 			{
 				m_traverseState = traverseMove;
 				m_driveTrain.resetEncoders();
+				m_gyro.Reset();
 				Wait(.5);
 				UpdateDashboard();
 			}
@@ -233,6 +233,7 @@ public:
 		// if in the turning part of a segment
 		if (m_traverseState == traverseTurn)
 		{
+			UpdateDashboard();
 			// AutoTurnUpdate() returns true when robot has turned the correct angle
 			if (m_driveTrain.AutoTurn(m_angle[m_traverseIndex]))
 			{
@@ -317,6 +318,7 @@ public:
 	void UpdateDashboard(void)
 	{
 		m_driveTrain.UpdateStats();
+		UpdateControlData();
 
 		frc::SmartDashboard::PutString("Robot : ", (g_bPracticeRobot) ? "Practice Robot" : "Competition Robot");
 		frc::SmartDashboard::PutString("AutoState     : ", m_strAutoState[m_autoState]);
@@ -380,8 +382,8 @@ public:
 			m_angle[i] = 0.0;
 		}
 
-		m_angle[0] 		= 0;
-		m_distance[0] 	= 125 / m_wheelCircumfrence;
+		m_angle[0] 		= 45;
+		m_distance[0] 	= kStart1Dist_0 / m_wheelCircumfrence;
 		m_leftSpeed[0]	= .3; //.2;
 		m_rightSpeed[0]	= .3; //.42;
 
