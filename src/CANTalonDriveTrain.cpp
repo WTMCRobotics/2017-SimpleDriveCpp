@@ -173,7 +173,7 @@ void CANTalonDriveTrain::AutoDriveStraightGyro(double leftCommand, double rightC
 
 void CANTalonDriveTrain::AutoCalculateTurn(double desiredAngle, double turnSpeed)
 {
-	calculatedSpeed = turnSpeed * ((desiredAngle < 0) ? -100 : 100);
+	calculatedSpeed = turnSpeed * ((desiredAngle < 0) ? -50 : 50);
 	m_pGyro->Reset();
 }
 
@@ -185,10 +185,44 @@ bool CANTalonDriveTrain::AutoTurn(double desiredAngle)
 	DriveTrainUpdateDashboard();
 	if (abs(trunc(currentAngle)) < abs(desiredAngle))
 	{
-		m_leftMasterDrive.Set(calculatedSpeed);
-		m_rightMasterDrive.Set(calculatedSpeed);
+		angleLeftToTurn = abs(desiredAngle) - abs(trunc(currentAngle));
+		if(angleLeftToTurn > 3)
+		{
+			m_leftMasterDrive.Set(calculatedSpeed);
+			m_rightMasterDrive.Set(calculatedSpeed);
+		}
+		else
+		{
+			m_leftMasterDrive.Set(calculatedSpeed * .5);
+			m_rightMasterDrive.Set(calculatedSpeed * .5);
+		}
+
 		DriveTrainUpdateDashboard();
 		return false;
+	}
+
+	Stop();
+	return true;
+}
+
+bool CANTalonDriveTrain::AutoTurnCorrect(double desiredAngle)
+{
+	currentAngle = m_pGyro->GetAngle();
+	angleLeftToTurn = abs(desiredAngle) - abs(currentAngle);
+	UpdateStats();
+	DriveTrainUpdateDashboard();
+	if(abs(angleLeftToTurn) > turnError)
+	{
+		if(angleLeftToTurn > 0)
+		{
+			m_leftMasterDrive.Set(calculatedSpeed * .25);
+			m_rightMasterDrive.Set(calculatedSpeed * .25);
+		}
+		else
+		{
+			m_leftMasterDrive.Set(-calculatedSpeed * .25);
+			m_rightMasterDrive.Set(-calculatedSpeed * .25);
+		}
 	}
 
 	Stop();
@@ -220,6 +254,7 @@ void CANTalonDriveTrain::DriveTrainUpdateDashboard(void)
 	frc::SmartDashboard::PutNumber("Left Enc. Pos. from Drivetrain : ", m_leftEncoderPos);
 	frc::SmartDashboard::PutNumber("Right Enc. Pos. from Drivetrain : ", m_rightEncoderPos);
 	frc::SmartDashboard::PutNumber("Current Angle from Drivetrain : ", currentAngle);
+	frc::SmartDashboard::PutNumber("Angle Left To Turn : ", angleLeftToTurn);
 	std::cout << "Gyro: " << trunc(currentAngle) << std::endl;
 }
 

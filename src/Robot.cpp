@@ -93,9 +93,10 @@ private:
 		traverseNext = 0,
 		traverseMove= 1,
 		traverseTurn = 2,
-		traverseDone  = 3
+		traverseCorrect = 3,
+		traverseDone  = 4
 	} eTraverseState;
-	std::string m_strTraverseState[4] = {"traverseNext", "traverseMove", "traverseTurn", "traverseDone"};
+	std::string m_strTraverseState[5] = {"traverseNext", "traverseMove", "traverseTurn", "traverseCorrect", "traverseDone"};
 
 
 	eAutonomousState m_autoState = autoDone;
@@ -212,7 +213,7 @@ public:
 				m_traverseState = traverseMove;
 				m_driveTrain.resetEncoders();
 				m_gyro.Reset();
-				Wait(.5);
+				Wait(.25);
 				UpdateDashboard();
 			}
 		}
@@ -226,6 +227,7 @@ public:
 				m_traverseState = traverseTurn;
 				m_gyro.Reset();
 				m_driveTrain.AutoCalculateTurn(m_angle[m_traverseIndex], kTurnSpeed);
+				Wait(.25);
 				UpdateDashboard();
 			}
 		}
@@ -233,9 +235,19 @@ public:
 		// if in the turning part of a segment
 		if (m_traverseState == traverseTurn)
 		{
+			UpdateControlData();
 			UpdateDashboard();
+			std::cout << "Gyro Outside: " << m_gyroAngle << std::endl;
 			// AutoTurnUpdate() returns true when robot has turned the correct angle
 			if (m_driveTrain.AutoTurn(m_angle[m_traverseIndex]))
+				m_traverseState = traverseCorrect;
+		}
+
+		if(m_traverseState == traverseCorrect)
+		{
+			UpdateControlData();
+			UpdateDashboard();
+			if(m_driveTrain.AutoTurnCorrect(m_angle[m_traverseIndex]))
 			{
 				// After turning is done, try to go to the next segment
 				m_traverseState = traverseNext;
@@ -251,6 +263,7 @@ public:
 	void TeleopInit()
 	{
 		firstTimeAuto = true;
+		m_gyro.Reset();
 		m_driveTrain.Stop();
 
 		frc::SmartDashboard::PutString("Alliance Color    : ", (m_allianceColor == DriverStation::Alliance::kRed) ? "Red" : "Blue");

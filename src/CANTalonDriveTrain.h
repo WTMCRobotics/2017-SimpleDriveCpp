@@ -55,6 +55,7 @@ private:
 	double revolutionsDone = 0;
 	double calculatedSpeed = 0;
 	double currentAngle = 0;
+	double angleLeftToTurn = 0;
 
 	double m_speedFactor = .25;
 
@@ -84,6 +85,7 @@ public:
 	void AutoDriveStraightGyro(double rightCommand, double leftCommand);
 	void AutoCalculateTurn(double desiredAngle, double turnSpeed);
 	bool AutoTurn(double desiredAngle);
+	bool AutoTurnCorrect(double desiredAngle);
 	bool AutoMove(double desiredRevolutions, double leftSpeed, double rightSpeed);
 
 	void SetSpeedFactor(double speedFactor) { m_speedFactor = fmax(0.0, fmin(m_speedFactor, 1.0)); }
