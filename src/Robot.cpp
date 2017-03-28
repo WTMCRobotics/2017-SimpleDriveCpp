@@ -202,6 +202,7 @@ public:
 					m_autoState = autoDropGear;
 				break;
 			case autoDropGear:
+				m_gearLift.Update(0.0, true, false);
 				m_autoState = autoDone;
 				break;
 			case autoDone:
@@ -323,8 +324,7 @@ public:
 		/*if(m_bRightBumper)
 			m_driveTrain.ArcadeDrive(m_leftJoystickY, m_leftJoystickX, m_bLeftBumper);
 		else*/
-
-		m_driveTrain.Update(m_leftJoystickY, m_rightJoystickY, m_bLeftBumper);
+			m_driveTrain.Update(m_leftJoystickY, m_rightJoystickY, m_bLeftBumper);
 
 		m_gearLift.Update(m_logitechYAxis, m_logitechTrigger, m_logitechOverrideButton);
 		m_winchMotor.Update(m_logitechThrottle);

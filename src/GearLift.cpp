@@ -51,7 +51,7 @@ void GearLift::Update(double joystickCommand, bool bClampControl, bool bOverride
 	}
 	else if ((m_gearLiftTarget < 0) && (!m_bGearLiftDown || bOverrideLimits) )
 	{
-			Lower();
+		Lower();
 	}
 	else
 	{
