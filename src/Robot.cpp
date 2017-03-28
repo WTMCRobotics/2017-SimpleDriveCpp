@@ -43,6 +43,13 @@ private:
 	JoystickButton logitechButtonOverrideLimits{&logitechController, 5};
 	frc::Compressor compressor{PCM_ID};
 
+	frc::SendableChooser<std::string> autoChooser;
+	std::string autoLeft = "Left";
+	std::string autoMiddle = "Middle";
+	std::string autoRight = "Right";
+	std::string defualt = "Default";
+	std::string autoSelected = "";
+
 	bool firstTimeAuto;
 
 	DriverStation::Alliance m_allianceColor;
@@ -107,6 +114,7 @@ private:
 	double m_leftSpeed[AUTO_MOVE_MAX_SEGMENTS];
 	double m_rightSpeed[AUTO_MOVE_MAX_SEGMENTS];
 	double m_distance[AUTO_MOVE_MAX_SEGMENTS];
+	double m_distanceAdjust[AUTO_MOVE_MAX_SEGMENTS];
 
 	double m_wheelCircumfrence = 0.00;
 
@@ -134,7 +142,17 @@ public:
 		//frc::CameraServer::GetInstance()->StartAutomaticCapture("Rear View Camera", 1);
 
 		firstTimeAuto = true;
-		InitializeAutonomous();
+
+		autoChooser.AddDefault(defualt, defualt);
+		autoChooser.AddObject(autoLeft, autoLeft);
+		autoChooser.AddObject(autoMiddle, autoMiddle);
+		autoChooser.AddObject(autoRight, autoRight);
+
+		frc::SmartDashboard::PutData("Autonomous Position Selector", &autoChooser);
+
+		m_driveTrain.resetEncoders();
+		m_gyro.Reset();
+		UpdateDashboard();
 	}
 
 
@@ -247,6 +265,7 @@ public:
 		{
 			UpdateControlData();
 			UpdateDashboard();
+			std::cout << "AutoCorrect True" << std::endl;
 			if(m_driveTrain.AutoTurnCorrect(m_angle[m_traverseIndex]))
 			{
 				// After turning is done, try to go to the next segment
@@ -331,11 +350,13 @@ public:
 	void UpdateDashboard(void)
 	{
 		m_driveTrain.UpdateStats();
+		m_driveTrain.DriveTrainUpdateDashboard();
 		UpdateControlData();
 
 		frc::SmartDashboard::PutString("Robot : ", (g_bPracticeRobot) ? "Practice Robot" : "Competition Robot");
 		frc::SmartDashboard::PutString("AutoState     : ", m_strAutoState[m_autoState]);
 		frc::SmartDashboard::PutString("TraverseState : ", m_strTraverseState[m_traverseState]);
+		frc::SmartDashboard::PutString("Auto Selected : ", autoSelected);
 
 		frc::SmartDashboard::PutNumber("Encoder Velocity Difference : ", round(m_driveTrain.GetEncoderVelocityDifference(), 2));
 
@@ -353,21 +374,19 @@ public:
 		frc::SmartDashboard::PutNumber("Right Enc. Pos.: ", round(m_driveTrain.GetRightEncoderPos(), 2));
 		frc::SmartDashboard::PutNumber("Right Enc. Vel.: ", round(m_driveTrain.GetRightEncoderVel(), 2));
 
-		frc::SmartDashboard::PutNumber("GearLift Up    : ", m_gearLift.IsUp());
-		frc::SmartDashboard::PutNumber("GearLift Down  : ", m_gearLift.IsDown());
-		frc::SmartDashboard::PutNumber("GearLift Clamp : ", m_gearLift.IsClamped());
-		frc::SmartDashboard::PutNumber("Winch Trigger  : ", round(m_leftTrigger, 2));
+		frc::SmartDashboard::PutBoolean("   GearLift Up     ", m_gearLift.IsUp());
+		frc::SmartDashboard::PutBoolean("   GearLift Down   ", m_gearLift.IsDown());
+		frc::SmartDashboard::PutBoolean("   GearLift Clamp  ", m_gearLift.IsClamped());
+		frc::SmartDashboard::PutNumber("Winch Trigger  : ", round(m_logitechThrottle, 2));
 
-		frc::SmartDashboard::PutNumber("Auto State     : ", m_autoState);
-		frc::SmartDashboard::PutNumber("TraverseIndex  : ", m_traverseIndex);
 		frc::SmartDashboard::PutNumber("TraverseState  : ", m_traverseState);
 
 		frc::SmartDashboard::PutNumber("Gyro Angle     : ", round(m_gyroAngle, 2));
 
-		frc::SmartDashboard::PutNumber("Y-Axis Joystick Test  : ", round(m_logitechYAxis, 2));
+		/*frc::SmartDashboard::PutNumber("Y-Axis Joystick Test  : ", round(m_logitechYAxis, 2));
 		frc::SmartDashboard::PutBoolean("Trigger Button : ", m_logitechTrigger);
-		frc::SmartDashboard::PutNumber("Slider Joystick Test : ", round(m_logitechThrottle, 2));
-		frc::SmartDashboard::PutBoolean("Limit Override : ", m_logitechOverrideButton);
+		frc::SmartDashboard::PutNumber("Slider Joystick Test : ", round(m_logitechThrottle, 2));*/
+		frc::SmartDashboard::PutBoolean("   Limit Override  ", m_logitechOverrideButton);
 
 		frc::SmartDashboard::PutBoolean("Switch Valve : ", compressor.GetPressureSwitchValue());
 		frc::SmartDashboard::PutBoolean("Compressor On : ", compressor.Enabled());
@@ -383,7 +402,12 @@ public:
 
 	void InitializeAutonomous()
 	{
+		autoSelected = autoChooser.GetSelected();
+		std::cout << "Reselected: " << autoSelected << std::endl;
+
 		m_traverseIndex = 0;
+
+		UpdateDashboard();
 
 		// clear all traverse segments
 		//
@@ -393,12 +417,51 @@ public:
 			m_leftSpeed[i] = 0.0;
 			m_rightSpeed[i] = 0.0;
 			m_angle[i] = 0.0;
+			m_distanceAdjust[i] = 0.0;
 		}
 
-		m_angle[0] 		= 45;
-		m_distance[0] 	= kStart1Dist_0 / m_wheelCircumfrence;
-		m_leftSpeed[0]	= .3; //.2;
-		m_rightSpeed[0]	= .3; //.42;
+		if(autoSelected == autoLeft)
+		{
+			m_distanceAdjust[0] = kStart1Dist_0 / 12;
+
+			m_angle[0] 		= kStart1Angle_0;
+			m_distance[0] 	= (kStart1Dist_0 - m_distanceAdjust[0]) / m_wheelCircumfrence;
+			m_leftSpeed[0]	= kStart1SpeedLf_0;
+			m_rightSpeed[0]	= kStart1SpeedRt_0;
+		}
+		else if(autoSelected == autoMiddle)
+		{
+			m_distanceAdjust[0] = kStart2Dist_0 / 12;
+
+			m_angle[0] 		= kStart2Angle_0;
+			m_distance[0] 	= (kStart2Dist_0 - m_distanceAdjust[0]) / m_wheelCircumfrence;
+			m_leftSpeed[0]	= kStart2SpeedLf_0;
+			m_rightSpeed[0]	= kStart2SpeedRt_0;
+		}
+		else if(autoSelected == autoRight)
+		{
+			m_distanceAdjust[0] = kStart3Dist_0 / 12;
+			m_distanceAdjust[1] = kStart3Dist_1 / 12;
+
+			m_angle[0] 		= kStart3Angle_0;
+			m_distance[0] 	= (kStart3Dist_0 - m_distanceAdjust[0]) / m_wheelCircumfrence;
+			m_leftSpeed[0]	= kStart3SpeedLf_0;
+			m_rightSpeed[0]	= kStart3SpeedRt_0;
+
+			m_angle[1] 		= kStart3Angle_1;
+			m_distance[1] 	= (kStart3Dist_1 - m_distanceAdjust[1]) / m_wheelCircumfrence;
+			m_leftSpeed[1]	= kStart3SpeedLf_1;
+			m_rightSpeed[1]	= kStart3SpeedRt_1;
+		}
+		else
+		{
+			m_distanceAdjust[0] = kStart2Dist_0 / 12;
+
+			m_angle[0] 		= kStart2Angle_0;
+			m_distance[0] 	= (kStart2Dist_0 - m_distanceAdjust[0]) / m_wheelCircumfrence;
+			m_leftSpeed[0]	= kStart2SpeedLf_0;
+			m_rightSpeed[0]	= kStart2SpeedRt_0;
+		}
 
 		// Now able to run the state machine in autonomous
 		m_autoState = autoStart;

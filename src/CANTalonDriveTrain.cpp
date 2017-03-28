@@ -164,7 +164,6 @@ void CANTalonDriveTrain::AutoDriveStraightGyro(double leftCommand, double rightC
 	{
 		m_leftMasterDrive.Set(-(leftCommand * DRIVE_MAX_SPEED * kSlowSpeedFactor));
 		m_rightMasterDrive.Set(rightCommand * DRIVE_MAX_SPEED * kSlowSpeedFactor);
-		std::cout << "Straight\n";
 	}
 
 	DriveTrainUpdateDashboard();
@@ -233,12 +232,16 @@ bool CANTalonDriveTrain::AutoMove(double desiredRevolutions, double leftSpeed, d
 {
 	frc::SmartDashboard::PutNumber("Desired Revolutions  : ", desiredRevolutions);
 	DriveTrainUpdateDashboard();
-	// +2000 attempts to make the wheel stop a little before it gets to the desired spot
-	revolutionsDone = (static_cast<double>(m_leftMasterDrive.GetEncPosition()) + 2000) / static_cast<double>(DRIVE_ENCDR_STEPS * 4);
+	// +4000 attempts to make the wheel stop a little before it gets to the desired spot
+	revolutionsDone = (static_cast<double>(m_leftMasterDrive.GetEncPosition()) + 4000) / static_cast<double>(DRIVE_ENCDR_STEPS * 4);
 	UpdateStats();
 	if((abs(revolutionsDone)) < desiredRevolutions)
 	{
-		AutoDriveStraightGyro(-leftSpeed, -rightSpeed);
+		if(desiredRevolutions - (abs(revolutionsDone)) < .5)
+			AutoDriveStraightGyro(-leftSpeed * .5, -rightSpeed * .5);
+		else
+			AutoDriveStraightGyro(-leftSpeed, -rightSpeed);
+
 		UpdateStats();
 		DriveTrainUpdateDashboard();
 		return false;
@@ -250,12 +253,9 @@ bool CANTalonDriveTrain::AutoMove(double desiredRevolutions, double leftSpeed, d
 
 void CANTalonDriveTrain::DriveTrainUpdateDashboard(void)
 {
-	frc::SmartDashboard::PutNumber("Revolutions Done  : ", abs(revolutionsDone));
-	frc::SmartDashboard::PutNumber("Left Enc. Pos. from Drivetrain : ", m_leftEncoderPos);
-	frc::SmartDashboard::PutNumber("Right Enc. Pos. from Drivetrain : ", m_rightEncoderPos);
+	frc::SmartDashboard::PutNumber("Revolutions Done  : ", revolutionsDone);
 	frc::SmartDashboard::PutNumber("Current Angle from Drivetrain : ", currentAngle);
 	frc::SmartDashboard::PutNumber("Angle Left To Turn : ", angleLeftToTurn);
-	std::cout << "Gyro: " << trunc(currentAngle) << std::endl;
 }
 
 double CANTalonDriveTrain::Deadband(double commandValue)
