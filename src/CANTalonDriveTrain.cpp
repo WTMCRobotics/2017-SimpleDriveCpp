@@ -148,13 +148,15 @@ void CANTalonDriveTrain::AutoDriveStraightEnc(double leftCommand, double rightCo
 void CANTalonDriveTrain::AutoDriveStraightGyro(double leftCommand, double rightCommand)
 {
 	currentAngle = m_pGyro->GetAngle();
-	if(trunc(currentAngle) > 1)
+	DriveTrainUpdateDashboard();
+
+	if(trunc(currentAngle) > .5)
 	{
 		m_leftMasterDrive.Set(-(leftCommand * DRIVE_MAX_SPEED * kSlowSpeedFactor) * adjustBy);
 		m_rightMasterDrive.Set((rightCommand) * DRIVE_MAX_SPEED * kSlowSpeedFactor);
 		std::cout << "Left Fast\n";
 	}
-	else if(trunc(currentAngle) < -1)
+	else if(trunc(currentAngle) < -.5)
 	{
 		m_leftMasterDrive.Set(-(leftCommand * DRIVE_MAX_SPEED * kSlowSpeedFactor));
 		m_rightMasterDrive.Set((rightCommand * adjustBy) * DRIVE_MAX_SPEED * kSlowSpeedFactor);
@@ -233,14 +235,11 @@ bool CANTalonDriveTrain::AutoMove(double desiredRevolutions, double leftSpeed, d
 	frc::SmartDashboard::PutNumber("Desired Revolutions  : ", desiredRevolutions);
 	DriveTrainUpdateDashboard();
 	// +4000 attempts to make the wheel stop a little before it gets to the desired spot
-	revolutionsDone = (static_cast<double>(m_leftMasterDrive.GetEncPosition()) + 4000) / static_cast<double>(DRIVE_ENCDR_STEPS * 4);
+	revolutionsDone = (static_cast<double>(abs(m_leftMasterDrive.GetEncPosition())) + 4000) / static_cast<double>(DRIVE_ENCDR_STEPS * 4);
 	UpdateStats();
 	if((abs(revolutionsDone)) < desiredRevolutions)
 	{
-		if(desiredRevolutions - (abs(revolutionsDone)) < .5)
-			AutoDriveStraightGyro(-leftSpeed * .5, -rightSpeed * .5);
-		else
-			AutoDriveStraightGyro(-leftSpeed, -rightSpeed);
+		AutoDriveStraightGyro(-leftSpeed, -rightSpeed);
 
 		UpdateStats();
 		DriveTrainUpdateDashboard();

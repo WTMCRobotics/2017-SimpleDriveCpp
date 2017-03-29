@@ -62,7 +62,7 @@
 #define AUTO_MOVE_MAX_SEGMENTS	3
 #define kTurnSpeed			0.15
 
-#define driveStraightAdjustment		0.2
+#define driveStraightAdjustment		0.1
 #define turnError					0.5
 
 // starting location 1 (LEFT lane for Red Alliance, RIGHT for Blue Alliance)
@@ -77,9 +77,9 @@
 
 // starting location 1 (CENTER lane for both Alliances)
 #define kStart2Angle_0		+0.0
-#define kStart2Dist_0		114.3
-#define kStart2SpeedLf_0	  0.3
-#define kStart2SpeedRt_0	  0.3
+#define kStart2Dist_0		93
+#define kStart2SpeedLf_0	  0.5
+#define kStart2SpeedRt_0	  0.5
 #define kStart2Angle_1			0.0
 #define kStart2Dist_1		  0.0
 #define kStart2SpeedLf_1	  0.0

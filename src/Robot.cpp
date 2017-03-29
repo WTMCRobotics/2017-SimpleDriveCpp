@@ -88,9 +88,10 @@ private:
 		autoStart	 = 0,
 		autoTraverse = 1,
 		autoDropGear = 2,
-		autoDone	 = 3
+		autoBackup	 = 3,
+		autoDone = 4
 	} eAutonomousState;
-	std::string m_strAutoState[4] = {"autoStart", "autoTraverse", "autoDropGear", "autoDone"};
+	std::string m_strAutoState[5] = {"autoStart", "autoTraverse", "autoDropGear", "autoBackup","autoDone"};
 
 
 	// traverse states
@@ -139,7 +140,7 @@ public:
 			m_wheelCircumfrence = COMPETITION_ROBOT_WHEEL_CIRCUMFRENCE;
 
 		frc::CameraServer::GetInstance()->StartAutomaticCapture("Gear Camera", 0);
-		//frc::CameraServer::GetInstance()->StartAutomaticCapture("Rear View Camera", 1);
+		frc::CameraServer::GetInstance()->StartAutomaticCapture("Rear View Camera", 1);
 
 		firstTimeAuto = true;
 
@@ -192,6 +193,7 @@ public:
 		switch (m_autoState)
 		{
 			case autoStart:
+				m_gearLift.Update(0.0, false, false);
 				m_autoState = autoTraverse;
 				break;
 			case autoTraverse:
@@ -203,7 +205,14 @@ public:
 				break;
 			case autoDropGear:
 				m_gearLift.Update(0.0, true, false);
-				m_autoState = autoDone;
+				m_driveTrain.resetEncoders();
+				m_gyro.Reset();
+				Wait(.25);
+				m_autoState = autoBackup;
+				break;
+			case autoBackup:
+				if(m_driveTrain.AutoMove(40/m_wheelCircumfrence, -.4, -.4))
+						m_autoState = autoDone;
 				break;
 			case autoDone:
 				break;
@@ -246,7 +255,6 @@ public:
 				m_traverseState = traverseTurn;
 				m_gyro.Reset();
 				m_driveTrain.AutoCalculateTurn(m_angle[m_traverseIndex], kTurnSpeed);
-				Wait(.25);
 				UpdateDashboard();
 			}
 		}
@@ -258,11 +266,25 @@ public:
 			UpdateDashboard();
 			std::cout << "Gyro Outside: " << m_gyroAngle << std::endl;
 			// AutoTurnUpdate() returns true when robot has turned the correct angle
-			if (m_driveTrain.AutoTurn(m_angle[m_traverseIndex]))
-				m_traverseState = traverseCorrect;
+			if(m_angle[m_traverseIndex] != 0)
+			{
+				if (m_driveTrain.AutoTurn(m_angle[m_traverseIndex]))
+				{
+					m_traverseState = traverseNext;
+					// Increment the index
+					m_traverseIndex++;
+				}
+			}
+			else
+			{
+				m_driveTrain.resetEncoders();
+				m_traverseState = traverseNext;
+				// Increment the index
+				m_traverseIndex++;
+			}
 		}
 
-		if(m_traverseState == traverseCorrect)
+	/*	if(m_traverseState == traverseCorrect)
 		{
 			UpdateControlData();
 			UpdateDashboard();
@@ -274,7 +296,7 @@ public:
 				// Increment the index
 				m_traverseIndex++;
 			}
-		}
+		}*/
 
 		// if return true did not trigger because robot in the middle of a segment, return false
 		return false;
@@ -402,9 +424,12 @@ public:
 
 	void InitializeAutonomous()
 	{
+		/*
 		autoSelected = autoChooser.GetSelected();
 		std::cout << "Reselected: " << autoSelected << std::endl;
+		 */
 
+		autoSelected = autoMiddle;
 		m_traverseIndex = 0;
 
 		UpdateDashboard();
