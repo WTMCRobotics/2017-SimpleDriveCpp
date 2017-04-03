@@ -43,14 +43,18 @@ private:
 	JoystickButton logitechButtonOverrideLimits{&logitechController, 5};
 	frc::Compressor compressor{PCM_ID};
 
+	Timer timer;
+	double secondsPassed = 0;
+
 	frc::SendableChooser<std::string> autoChooser;
 	std::string autoLeft = "Left";
 	std::string autoMiddle = "Middle";
 	std::string autoRight = "Right";
-	std::string defualt = "Default";
+	std::string autoDefault = "Default";
 	std::string autoSelected = "";
 
 	bool firstTimeAuto;
+	bool timerOverride = false;
 
 	DriverStation::Alliance m_allianceColor;
 	int m_allianceLocation;
@@ -144,13 +148,14 @@ public:
 
 		firstTimeAuto = true;
 
-		autoChooser.AddDefault(defualt, defualt);
+		autoChooser.AddDefault(autoDefault, autoDefault);
 		autoChooser.AddObject(autoLeft, autoLeft);
 		autoChooser.AddObject(autoMiddle, autoMiddle);
 		autoChooser.AddObject(autoRight, autoRight);
 
 		frc::SmartDashboard::PutData("Autonomous Position Selector", &autoChooser);
 
+		timer.Reset();
 		m_driveTrain.resetEncoders();
 		m_gyro.Reset();
 		UpdateDashboard();
@@ -182,6 +187,7 @@ public:
 	//
 	void AutonomousPeriodic()
 	{
+
 		if(firstTimeAuto)
 		{
 			printf("%s\n", "AutoPeriodic");
@@ -201,18 +207,29 @@ public:
 				// the either isn't another segment allowed, or the next segment
 				// has a speed of 0
 				if (AutoTraverse())
-					m_autoState = autoDropGear;
+				{
+					if(autoSelected == autoDefault)
+					{
+						m_autoState = autoDone;
+					}
+					else
+					{
+						m_autoState = autoDropGear;
+					}
+				}
 				break;
 			case autoDropGear:
 				m_gearLift.Update(0.0, true, false);
+				timer.Stop();
 				m_driveTrain.resetEncoders();
 				m_gyro.Reset();
 				Wait(.25);
-				m_autoState = autoBackup;
+				//m_autoState = autoBackup;
+				m_autoState = autoDone;
 				break;
 			case autoBackup:
 				if(m_driveTrain.AutoMove(40/m_wheelCircumfrence, -.4, -.4))
-						m_autoState = autoDone;
+					m_autoState = autoDone;
 				break;
 			case autoDone:
 				break;
@@ -241,6 +258,8 @@ public:
 				m_traverseState = traverseMove;
 				m_driveTrain.resetEncoders();
 				m_gyro.Reset();
+				timer.Reset();
+				timer.Start();
 				Wait(.25);
 				UpdateDashboard();
 			}
@@ -249,10 +268,31 @@ public:
 		// if in the moving part of the segment
 		if (m_traverseState == traverseMove)
 		{
+			secondsPassed = timer.Get();
 			// AutoMoveUpdate() returns true when the robot has moved the correct distance
-			if (m_driveTrain.AutoMove(m_distance[m_traverseIndex], m_leftSpeed[m_traverseIndex], m_rightSpeed[m_traverseIndex]))
+			if(secondsPassed > 5 && (autoSelected == autoMiddle || autoSelected == autoDefault))
+			{
+				m_driveTrain.Stop();
+				timerOverride = true;
+				m_traverseState = traverseTurn;
+				m_gyro.Reset();
+				m_driveTrain.AutoCalculateTurn(m_angle[m_traverseIndex], kTurnSpeed);
+				UpdateDashboard();
+			}
+			else if(secondsPassed > 5 && (autoSelected == autoLeft || autoSelected == autoRight) && m_traverseIndex == 1)
+			{
+				m_driveTrain.Stop();
+				timerOverride = true;
+				m_traverseState = traverseTurn;
+				m_gyro.Reset();
+				m_driveTrain.AutoCalculateTurn(m_angle[m_traverseIndex], kTurnSpeed);
+				UpdateDashboard();
+			}
+			else if (m_driveTrain.AutoMove(m_distance[m_traverseIndex], m_leftSpeed[m_traverseIndex], m_rightSpeed[m_traverseIndex]))
 			{
 				m_traverseState = traverseTurn;
+				timer.Stop();
+				timer.Reset();
 				m_gyro.Reset();
 				m_driveTrain.AutoCalculateTurn(m_angle[m_traverseIndex], kTurnSpeed);
 				UpdateDashboard();
@@ -409,12 +449,16 @@ public:
 		frc::SmartDashboard::PutBoolean("Trigger Button : ", m_logitechTrigger);
 		frc::SmartDashboard::PutNumber("Slider Joystick Test : ", round(m_logitechThrottle, 2));*/
 		frc::SmartDashboard::PutBoolean("   Limit Override  ", m_logitechOverrideButton);
+		frc::SmartDashboard::PutBoolean("Slow Speed :  ", m_bLeftBumper);
+
 
 		frc::SmartDashboard::PutBoolean("Switch Valve : ", compressor.GetPressureSwitchValue());
 		frc::SmartDashboard::PutBoolean("Compressor On : ", compressor.Enabled());
 
 		frc::SmartDashboard::PutBoolean("First Time Auto  : ", firstTimeAuto);
 
+		frc::SmartDashboard::PutNumber("Seconds Passed   : ", secondsPassed);
+		frc::SmartDashboard::PutBoolean("Timer Override Activated: ", timerOverride);
 
 		frc::SmartDashboard::PutNumber("Auto Distance     : ", round(m_distance[m_traverseIndex], 2));
 		frc::SmartDashboard::PutNumber("Auto Angle    : ", round(m_angle[m_traverseIndex], 2));
@@ -424,12 +468,9 @@ public:
 
 	void InitializeAutonomous()
 	{
-		/*
 		autoSelected = autoChooser.GetSelected();
 		std::cout << "Reselected: " << autoSelected << std::endl;
-		 */
 
-		autoSelected = autoMiddle;
 		m_traverseIndex = 0;
 
 		UpdateDashboard();
@@ -492,6 +533,10 @@ public:
 		m_autoState = autoStart;
 		m_traverseState = traverseNext;
 
+
+		timerOverride = false;
+		timer.Reset();
+		m_gyro.Reset();
 		m_driveTrain.resetEncoders();
 	}
 

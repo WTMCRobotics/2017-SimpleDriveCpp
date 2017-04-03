@@ -150,22 +150,22 @@ void CANTalonDriveTrain::AutoDriveStraightGyro(double leftCommand, double rightC
 	currentAngle = m_pGyro->GetAngle();
 	DriveTrainUpdateDashboard();
 
-	if(trunc(currentAngle) > .5)
+	if(((currentAngle > .5) && leftCommand < 0) || ((currentAngle < -.5) && leftCommand > 0))
 	{
-		m_leftMasterDrive.Set(-(leftCommand * DRIVE_MAX_SPEED * kSlowSpeedFactor) * adjustBy);
-		m_rightMasterDrive.Set((rightCommand) * DRIVE_MAX_SPEED * kSlowSpeedFactor);
+		m_leftMasterDrive.Set(-(leftCommand * DRIVE_MAX_SPEED * autoSpeedFactor) * adjustBy);
+		m_rightMasterDrive.Set((rightCommand) * DRIVE_MAX_SPEED * autoSpeedFactor);
 		std::cout << "Left Fast\n";
 	}
-	else if(trunc(currentAngle) < -.5)
+	else if(((currentAngle < -.5) && leftCommand < 0) || ((currentAngle > .5) && leftCommand > 0))
 	{
-		m_leftMasterDrive.Set(-(leftCommand * DRIVE_MAX_SPEED * kSlowSpeedFactor));
-		m_rightMasterDrive.Set((rightCommand * adjustBy) * DRIVE_MAX_SPEED * kSlowSpeedFactor);
+		m_leftMasterDrive.Set(-(leftCommand * DRIVE_MAX_SPEED * autoSpeedFactor));
+		m_rightMasterDrive.Set((rightCommand * adjustBy) * DRIVE_MAX_SPEED * autoSpeedFactor);
 		std::cout << "Right Fast\n";
 	}
 	else
 	{
-		m_leftMasterDrive.Set(-(leftCommand * DRIVE_MAX_SPEED * kSlowSpeedFactor));
-		m_rightMasterDrive.Set(rightCommand * DRIVE_MAX_SPEED * kSlowSpeedFactor);
+		m_leftMasterDrive.Set(-(leftCommand * DRIVE_MAX_SPEED * autoSpeedFactor));
+		m_rightMasterDrive.Set(rightCommand * DRIVE_MAX_SPEED * autoSpeedFactor);
 	}
 
 	DriveTrainUpdateDashboard();
@@ -174,7 +174,7 @@ void CANTalonDriveTrain::AutoDriveStraightGyro(double leftCommand, double rightC
 
 void CANTalonDriveTrain::AutoCalculateTurn(double desiredAngle, double turnSpeed)
 {
-	calculatedSpeed = turnSpeed * ((desiredAngle < 0) ? -50 : 50);
+	calculatedSpeed = turnSpeed * ((desiredAngle < 0) ? -75 : 75);
 	m_pGyro->Reset();
 }
 
