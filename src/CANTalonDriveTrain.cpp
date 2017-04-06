@@ -174,7 +174,7 @@ void CANTalonDriveTrain::AutoDriveStraightGyro(double leftCommand, double rightC
 
 void CANTalonDriveTrain::AutoCalculateTurn(double desiredAngle, double turnSpeed)
 {
-	calculatedSpeed = turnSpeed * ((desiredAngle < 0) ? -75 : 75);
+	calculatedSpeed = turnSpeed * ((desiredAngle < 0) ? -DRIVE_MAX_SPEED * m_speedFactor : DRIVE_MAX_SPEED * m_speedFactor);
 	m_pGyro->Reset();
 }
 
@@ -187,15 +187,15 @@ bool CANTalonDriveTrain::AutoTurn(double desiredAngle)
 	if (abs(trunc(currentAngle)) < abs(desiredAngle))
 	{
 		angleLeftToTurn = abs(desiredAngle) - abs(trunc(currentAngle));
-		if(angleLeftToTurn > 3)
+		if(angleLeftToTurn > 30)
 		{
 			m_leftMasterDrive.Set(calculatedSpeed);
 			m_rightMasterDrive.Set(calculatedSpeed);
 		}
 		else
 		{
-			m_leftMasterDrive.Set(calculatedSpeed * .5);
-			m_rightMasterDrive.Set(calculatedSpeed * .5);
+			m_leftMasterDrive.Set(calculatedSpeed * .75);
+			m_rightMasterDrive.Set(calculatedSpeed * .75);
 		}
 
 		DriveTrainUpdateDashboard();
@@ -206,24 +206,25 @@ bool CANTalonDriveTrain::AutoTurn(double desiredAngle)
 	return true;
 }
 
-bool CANTalonDriveTrain::AutoTurnCorrect(double desiredAngle)
+bool CANTalonDriveTrain::AutoTurnCorrect(double desiredAngle, double correctTurnSpeed)
 {
 	currentAngle = m_pGyro->GetAngle();
-	angleLeftToTurn = abs(desiredAngle) - abs(currentAngle);
+	angleLeftToTurn = desiredAngle - currentAngle;
 	UpdateStats();
 	DriveTrainUpdateDashboard();
 	if(abs(angleLeftToTurn) > turnError)
 	{
-		if(angleLeftToTurn > 0)
+		if((abs(desiredAngle) - abs(currentAngle)) > 0)
 		{
-			m_leftMasterDrive.Set(calculatedSpeed * .25);
-			m_rightMasterDrive.Set(calculatedSpeed * .25);
+			m_leftMasterDrive.Set(calculatedSpeed * correctTurnSpeed);
+			m_rightMasterDrive.Set(calculatedSpeed * correctTurnSpeed);
 		}
 		else
 		{
-			m_leftMasterDrive.Set(-calculatedSpeed * .25);
-			m_rightMasterDrive.Set(-calculatedSpeed * .25);
+			m_leftMasterDrive.Set(-calculatedSpeed * correctTurnSpeed);
+			m_rightMasterDrive.Set(-calculatedSpeed * correctTurnSpeed);
 		}
+		return false;
 	}
 
 	Stop();
