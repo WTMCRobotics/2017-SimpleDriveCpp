@@ -216,13 +216,30 @@ bool CANTalonDriveTrain::AutoTurnCorrect(double desiredAngle, double correctTurn
 	{
 		if((abs(desiredAngle) - abs(currentAngle)) > 0)
 		{
-			m_leftMasterDrive.Set(calculatedSpeed * correctTurnSpeed);
-			m_rightMasterDrive.Set(calculatedSpeed * correctTurnSpeed);
+			if((abs(desiredAngle) - abs(currentAngle)) < .75)
+			{
+				m_leftMasterDrive.Set(calculatedSpeed * correctTurnSpeed * .6);
+				m_rightMasterDrive.Set(calculatedSpeed * correctTurnSpeed * .6);
+			}
+			else
+			{
+				m_leftMasterDrive.Set(calculatedSpeed * correctTurnSpeed);
+				m_rightMasterDrive.Set(calculatedSpeed * correctTurnSpeed);
+			}
+
 		}
 		else
 		{
-			m_leftMasterDrive.Set(-calculatedSpeed * correctTurnSpeed);
-			m_rightMasterDrive.Set(-calculatedSpeed * correctTurnSpeed);
+			if((abs(desiredAngle) - abs(currentAngle)) < -.75)
+			{
+				m_leftMasterDrive.Set(-calculatedSpeed * correctTurnSpeed * .6);
+				m_rightMasterDrive.Set(-calculatedSpeed * correctTurnSpeed * .6);
+			}
+			else
+			{
+				m_leftMasterDrive.Set(-calculatedSpeed * correctTurnSpeed);
+				m_rightMasterDrive.Set(-calculatedSpeed * correctTurnSpeed);
+			}
 		}
 		return false;
 	}

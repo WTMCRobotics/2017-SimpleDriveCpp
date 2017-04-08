@@ -69,6 +69,7 @@ private:
 	DigitalInput 		m_diPracticeRobot {DIO_PRACTICE_ROBOT};
 
 	double 	m_gyroAngle;
+	double correctedAngle;
 	double 	m_leftJoystickY;
 	double  m_leftJoystickX;
 	double 	m_rightJoystickY;
@@ -232,7 +233,8 @@ public:
 				m_autoState = autoBackup;
 				break;
 			case autoBackup:
-				if(m_driveTrain.AutoMove(40/m_wheelCircumfrence, -.4, -.4))
+				// Change -.2 to -.4 for competition
+				if(m_driveTrain.AutoMove(40/m_wheelCircumfrence, -.2, -.2))
 					m_autoState = autoDone;
 				break;
 			case autoDone:
@@ -283,7 +285,7 @@ public:
 				m_driveTrain.AutoCalculateTurn(m_angle[m_traverseIndex], kTurnSpeed);
 				UpdateDashboard();
 			}
-			else if(secondsPassed > 5 && (autoSelected == autoLeft || autoSelected == autoRight) && m_traverseIndex == 1)
+			else if(secondsPassed > 3 && (autoSelected == autoLeft || autoSelected == autoRight) && m_traverseIndex == 1)
 			{
 				m_driveTrain.Stop();
 				timerOverride = true;
@@ -345,7 +347,8 @@ public:
 			UpdateDashboard();
 			if(m_driveTrain.AutoTurnCorrect(m_angle[m_traverseIndex], turnCorrectionSpeedModifier))
 			{
-				std::cout << "Corrected Angle: " << m_gyro.GetAngle() << std::endl;
+				correctedAngle = m_gyro.GetAngle();
+				frc::SmartDashboard::PutNumber("Corrected Angle: ", round(correctedAngle, 2));
 				UpdateControlData();
 				UpdateDashboard();
 				// After turning is done, try to go to the next segment
@@ -509,12 +512,12 @@ public:
 			m_distanceAdjust[1] = preferences->GetDouble("(Left) 2nd Move", 0) / 12;
 
 			m_angle[0] 		= preferences->GetDouble("(Left) 1st Turn", 0);
-			m_distance[0] 	= (preferences->GetDouble("(Left) 1st Move", 0) - m_distanceAdjust[0]) / m_wheelCircumfrence;
+			m_distance[0] 	= (preferences->GetDouble("(Left) 1st Move", 0) - (m_distanceAdjust[0])) / m_wheelCircumfrence;
 			m_leftSpeed[0]	= preferences->GetDouble("(Left) 1st Left Speed", 0);
 			m_rightSpeed[0]	= preferences->GetDouble("(Left) 1st Right Speed", 0);
 
 			m_angle[1] 		= preferences->GetDouble("(Left) 2nd Turn", 0);
-			m_distance[1] 	= (preferences->GetDouble("(Left) 2nd Move", 0) - m_distanceAdjust[1]) / m_wheelCircumfrence;
+			m_distance[1] 	= (preferences->GetDouble("(Left) 2nd Move", 0) - (m_distanceAdjust[1])) / m_wheelCircumfrence;
 			m_leftSpeed[1]	= preferences->GetDouble("(Left) 2nd Left Speed", 0);
 			m_rightSpeed[1]	= preferences->GetDouble("(Left) 2nd Right Speed", 0);
 		}
@@ -533,12 +536,12 @@ public:
 			m_distanceAdjust[1] = preferences->GetDouble("(Right) 2nd Move", 0) / 12;
 
 			m_angle[0] 		= preferences->GetDouble("(Right) 1st Turn", 0);
-			m_distance[0] 	= (preferences->GetDouble("(Right) 1st Move", 0) - m_distanceAdjust[0]) / m_wheelCircumfrence;
+			m_distance[0] 	= (preferences->GetDouble("(Right) 1st Move", 0) - (m_distanceAdjust[0])) / m_wheelCircumfrence;
 			m_leftSpeed[0]	= preferences->GetDouble("(Right) 1st Left Speed", 0);
 			m_rightSpeed[0]	= preferences->GetDouble("(Right) 1st Right Speed", 0);
 
 			m_angle[1] 		= preferences->GetDouble("(Right) 2nd Turn", 0);
-			m_distance[1] 	= (preferences->GetDouble("(Right) 2nd Move", 0) - m_distanceAdjust[1]) / m_wheelCircumfrence;
+			m_distance[1] 	= (preferences->GetDouble("(Right) 2nd Move", 0) - (m_distanceAdjust[1])) / m_wheelCircumfrence;
 			m_leftSpeed[1]	= preferences->GetDouble("(Right) 2nd Left Speed", 0);
 			m_rightSpeed[1]	= preferences->GetDouble("(Right) 2nd Right Speed", 0);
 		}

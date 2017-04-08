@@ -65,7 +65,7 @@
 #define kTurnSpeed			0.1
 
 #define driveStraightAdjustment		0.65
-#define turnError					0.25
+#define turnError					0.1
 
 // starting location 1 (LEFT lane for Red Alliance, RIGHT for Blue Alliance)
 #define kStart1Angle_0		  60
