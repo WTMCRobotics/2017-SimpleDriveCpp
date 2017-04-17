@@ -174,7 +174,7 @@ void CANTalonDriveTrain::AutoDriveStraightGyro(double leftCommand, double rightC
 
 void CANTalonDriveTrain::AutoCalculateTurn(double desiredAngle, double turnSpeed)
 {
-	calculatedSpeed = turnSpeed * ((desiredAngle < 0) ? -DRIVE_MAX_SPEED * m_speedFactor : DRIVE_MAX_SPEED * m_speedFactor);
+	calculatedSpeed = turnSpeed * ((desiredAngle < 0) ? -DRIVE_MAX_SPEED * autoSpeedFactor : DRIVE_MAX_SPEED * autoSpeedFactor);
 	m_pGyro->Reset();
 }
 
@@ -186,17 +186,8 @@ bool CANTalonDriveTrain::AutoTurn(double desiredAngle)
 	DriveTrainUpdateDashboard();
 	if (abs(trunc(currentAngle)) < abs(desiredAngle))
 	{
-		angleLeftToTurn = abs(desiredAngle) - abs(trunc(currentAngle));
-		if(angleLeftToTurn > 30)
-		{
-			m_leftMasterDrive.Set(calculatedSpeed);
-			m_rightMasterDrive.Set(calculatedSpeed);
-		}
-		else
-		{
-			m_leftMasterDrive.Set(calculatedSpeed * .75);
-			m_rightMasterDrive.Set(calculatedSpeed * .75);
-		}
+		m_leftMasterDrive.Set(calculatedSpeed);
+		m_rightMasterDrive.Set(calculatedSpeed);
 
 		DriveTrainUpdateDashboard();
 		return false;
@@ -216,30 +207,13 @@ bool CANTalonDriveTrain::AutoTurnCorrect(double desiredAngle, double correctTurn
 	{
 		if((abs(desiredAngle) - abs(currentAngle)) > 0)
 		{
-			if((abs(desiredAngle) - abs(currentAngle)) < .75)
-			{
-				m_leftMasterDrive.Set(calculatedSpeed * correctTurnSpeed * .6);
-				m_rightMasterDrive.Set(calculatedSpeed * correctTurnSpeed * .6);
-			}
-			else
-			{
-				m_leftMasterDrive.Set(calculatedSpeed * correctTurnSpeed);
-				m_rightMasterDrive.Set(calculatedSpeed * correctTurnSpeed);
-			}
-
+			m_leftMasterDrive.Set(calculatedSpeed * correctTurnSpeed);
+			m_rightMasterDrive.Set(calculatedSpeed * correctTurnSpeed);
 		}
 		else
 		{
-			if((abs(desiredAngle) - abs(currentAngle)) < -.75)
-			{
-				m_leftMasterDrive.Set(-calculatedSpeed * correctTurnSpeed * .6);
-				m_rightMasterDrive.Set(-calculatedSpeed * correctTurnSpeed * .6);
-			}
-			else
-			{
-				m_leftMasterDrive.Set(-calculatedSpeed * correctTurnSpeed);
-				m_rightMasterDrive.Set(-calculatedSpeed * correctTurnSpeed);
-			}
+			m_leftMasterDrive.Set(-calculatedSpeed * correctTurnSpeed);
+			m_rightMasterDrive.Set(-calculatedSpeed * correctTurnSpeed);
 		}
 		return false;
 	}
@@ -273,6 +247,20 @@ void CANTalonDriveTrain::DriveTrainUpdateDashboard(void)
 	frc::SmartDashboard::PutNumber("Revolutions Done  : ", revolutionsDone);
 	frc::SmartDashboard::PutNumber("Current Angle from Drivetrain : ", currentAngle);
 	frc::SmartDashboard::PutNumber("Angle Left To Turn : ", angleLeftToTurn);
+}
+
+void CANTalonDriveTrain::setBrakeMode(bool brakeOn)
+{
+	if(brakeOn)
+	{
+		m_rightMasterDrive.ConfigNeutralMode(CANSpeedController::NeutralMode::kNeutralMode_Brake);
+		m_leftMasterDrive.ConfigNeutralMode(CANSpeedController::NeutralMode::kNeutralMode_Brake);
+	}
+	else
+	{
+		m_rightMasterDrive.ConfigNeutralMode(CANSpeedController::NeutralMode::kNeutralMode_Coast);
+		m_leftMasterDrive.ConfigNeutralMode(CANSpeedController::NeutralMode::kNeutralMode_Coast);
+	}
 }
 
 double CANTalonDriveTrain::Deadband(double commandValue)

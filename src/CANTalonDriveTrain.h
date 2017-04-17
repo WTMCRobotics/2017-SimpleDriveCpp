@@ -105,6 +105,8 @@ public:
 	void resetEncoders(void) {m_leftMasterDrive.SetPosition(0); m_rightMasterDrive.SetPosition(0);}
 	void DriveTrainUpdateDashboard(void);
 
+	void setBrakeMode(bool brakeOn);
+
 
 	double GetLeftTarget(void)		{ return m_leftTarget;}
 	double GetRightTarget(void) 	{ return m_rightTarget;}

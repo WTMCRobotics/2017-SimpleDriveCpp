@@ -234,10 +234,11 @@ public:
 				break;
 			case autoBackup:
 				// Change -.2 to -.4 for competition
-				if(m_driveTrain.AutoMove(40/m_wheelCircumfrence, -.2, -.2))
+				if(m_driveTrain.AutoMove(40/m_wheelCircumfrence, -.4, -.4))
 					m_autoState = autoDone;
 				break;
 			case autoDone:
+				m_gearLift.Update(0.0, false, false);
 				break;
 		}
 
@@ -342,7 +343,7 @@ public:
 
 		if(m_traverseState == traverseCorrect)
 		{
-			turnCorrectionSpeedModifier =  preferences->GetDouble("Correct Turn Speed", 0);
+			turnCorrectionSpeedModifier = 1;
 			UpdateControlData();
 			UpdateDashboard();
 			if(m_driveTrain.AutoTurnCorrect(m_angle[m_traverseIndex], turnCorrectionSpeedModifier))
@@ -370,6 +371,8 @@ public:
 
 		frc::SmartDashboard::PutString("Alliance Color    : ", (m_allianceColor == DriverStation::Alliance::kRed) ? "Red" : "Blue");
 		frc::SmartDashboard::PutNumber("Alliance Location : ", m_allianceLocation);
+
+		m_driveTrain.setBrakeMode(false);
 	}
 
 	void UpdateControlData()
@@ -488,8 +491,11 @@ public:
 
 	void InitializeAutonomous()
 	{
+		m_driveTrain.setBrakeMode(true);
 		autoSelected = autoChooser.GetSelected();
+
 		std::cout << "Reselected: " << autoSelected << std::endl;
+
 
 		m_traverseIndex = 0;
 
@@ -508,18 +514,18 @@ public:
 
 		if(autoSelected == autoLeft)
 		{
-			m_distanceAdjust[0] = preferences->GetDouble("(Left) 1st Move", 0) / 12;
-			m_distanceAdjust[1] = preferences->GetDouble("(Left) 2nd Move", 0) / 12;
+			m_distanceAdjust[0] = 0;
+			m_distanceAdjust[1] = 0;
 
-			m_angle[0] 		= preferences->GetDouble("(Left) 1st Turn", 0);
-			m_distance[0] 	= (preferences->GetDouble("(Left) 1st Move", 0) - (m_distanceAdjust[0])) / m_wheelCircumfrence;
-			m_leftSpeed[0]	= preferences->GetDouble("(Left) 1st Left Speed", 0);
-			m_rightSpeed[0]	= preferences->GetDouble("(Left) 1st Right Speed", 0);
+			m_angle[0] 		= 60;
+			m_distance[0] 	= 75 / m_wheelCircumfrence;
+			m_leftSpeed[0]	= .5;
+			m_rightSpeed[0]	= .5;
 
-			m_angle[1] 		= preferences->GetDouble("(Left) 2nd Turn", 0);
-			m_distance[1] 	= (preferences->GetDouble("(Left) 2nd Move", 0) - (m_distanceAdjust[1])) / m_wheelCircumfrence;
-			m_leftSpeed[1]	= preferences->GetDouble("(Left) 2nd Left Speed", 0);
-			m_rightSpeed[1]	= preferences->GetDouble("(Left) 2nd Right Speed", 0);
+			m_angle[1] 		= 0;
+			m_distance[1] 	= 35 / m_wheelCircumfrence;
+			m_leftSpeed[1]	= .4;
+			m_rightSpeed[1]	= .4;
 		}
 		else if(autoSelected == autoMiddle)
 		{
@@ -532,18 +538,18 @@ public:
 		}
 		else if(autoSelected == autoRight)
 		{
-			m_distanceAdjust[0] = preferences->GetDouble("(Right) 1st Move", 0) / 12;
-			m_distanceAdjust[1] = preferences->GetDouble("(Right) 2nd Move", 0) / 12;
+			m_distanceAdjust[0] = 0;
+			m_distanceAdjust[1] = 0;
 
-			m_angle[0] 		= preferences->GetDouble("(Right) 1st Turn", 0);
-			m_distance[0] 	= (preferences->GetDouble("(Right) 1st Move", 0) - (m_distanceAdjust[0])) / m_wheelCircumfrence;
-			m_leftSpeed[0]	= preferences->GetDouble("(Right) 1st Left Speed", 0);
-			m_rightSpeed[0]	= preferences->GetDouble("(Right) 1st Right Speed", 0);
+			m_distance[0] 	= 75 / m_wheelCircumfrence;
+			m_leftSpeed[0]	= .5;
+			m_rightSpeed[0]	= .5;
+			m_angle[0] 		= -60;
 
-			m_angle[1] 		= preferences->GetDouble("(Right) 2nd Turn", 0);
-			m_distance[1] 	= (preferences->GetDouble("(Right) 2nd Move", 0) - (m_distanceAdjust[1])) / m_wheelCircumfrence;
-			m_leftSpeed[1]	= preferences->GetDouble("(Right) 2nd Left Speed", 0);
-			m_rightSpeed[1]	= preferences->GetDouble("(Right) 2nd Right Speed", 0);
+			m_angle[1] 		= 0;
+			m_distance[1] 	= 35 / m_wheelCircumfrence;
+			m_leftSpeed[1]	= .4;
+			m_rightSpeed[1]	= .4;
 		}
 		else
 		{

@@ -62,7 +62,7 @@
 // Autonomous mode constants
 //
 #define AUTO_MOVE_MAX_SEGMENTS	3
-#define kTurnSpeed			0.1
+#define kTurnSpeed			0.5
 
 #define driveStraightAdjustment		0.65
 #define turnError					0.1
